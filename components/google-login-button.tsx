@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useAuth } from "@/provider";
+import { useAuth } from "@/context";
 
 export default function GoogleLoginButton() {
   const { signIn } = useAuth();

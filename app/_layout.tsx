@@ -1,17 +1,17 @@
-import { AuthProvider, useAuth } from "@/provider";
+import { AuthProvider, useAuth } from "@/context";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 function InitialLayout() {
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
   return (
     <Stack>
-      <Stack.Protected guard={isAuthenticated}>
+      <Stack.Protected guard={user ? true : false}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack.Protected>
 
-      <Stack.Protected guard={!isAuthenticated}>
+      <Stack.Protected guard={!user}>
         <Stack.Screen
           name="index"
           options={{
