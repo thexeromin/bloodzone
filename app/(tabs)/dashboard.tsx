@@ -1,36 +1,31 @@
 import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
-import { useAuth } from "@/context";
 import UserStats from "@/components/user-stats";
+import EmergencyRecipients from "@/components/emergency-recipients";
 
 export default function Dashboard() {
-  const { signOut, user } = useAuth();
-
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Dashboard</Text>
 
-      <UserStats />
+      <UserStats donations={100} bloodType="AB+" lastDonated={20} />
 
-      <Text>{JSON.stringify(user)}</Text>
-      <Pressable onPress={signOut}>
-        <Text>Logout</Text>
-      </Pressable>
+      <EmergencyRecipients />
     </View>
   );
 }
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     paddingTop: 45,
     paddingHorizontal: 20,
-    backgroundColor: "#171717",
-    flex: 1
+    backgroundColor: "#171717"
   },
   header: {
+    color: "#F5F3F4",
     fontSize: 26,
     fontFamily: Platform.select({
       android: "Poppins_400Regular",
       ios: "Poppins-Regular"
-    }),
-    color: "#F5F3F4"
+    })
   }
 });
