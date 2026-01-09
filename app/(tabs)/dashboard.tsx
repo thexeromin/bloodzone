@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
+import { View, Text, Platform, StyleSheet } from "react-native";
 import UserStats from "@/components/user-stats";
 import EmergencyRecipients from "@/components/emergency-recipients";
 
@@ -13,6 +13,7 @@ export default function Dashboard() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

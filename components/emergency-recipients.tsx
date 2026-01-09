@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Platform, FlatList } from "react-native";
 import Recipient from "./recipient";
 
 // TODO: delete this mock data
-const recipientsData: RecipientProps[] = [
+const recipientsData = [
   {
     id: "1",
     image: require("@/assets/images/avatar.jpg"),
