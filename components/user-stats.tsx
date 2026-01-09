@@ -21,7 +21,7 @@ export default function UserStats({
 
       <View style={styles.rightColumn}>
         <View style={[styles.box, styles.bloodInfoContainer]}>
-          <Fontisto name="blood-drop" size={18} color="#ff4d4f" />
+          <Fontisto name="blood-drop" size={18} color="#FF4D4F" />
           <Text style={[styles.boxText, styles.bloodValue]}>{bloodType}</Text>
         </View>
         <View style={styles.box}>
