@@ -1,6 +1,6 @@
 import { View, Text, Platform, StyleSheet } from "react-native";
 import UserStats from "@/components/user-stats";
-import EmergencyRecipients from "@/components/emergency-recipients";
+import Recipients from "@/components/recipients";
 
 export default function Dashboard() {
   return (
@@ -9,7 +9,7 @@ export default function Dashboard() {
 
       <UserStats donations={100} bloodType="AB+" lastDonated={20} />
 
-      <EmergencyRecipients />
+      <Recipients title="Emergency Recipients" />
     </View>
   );
 }

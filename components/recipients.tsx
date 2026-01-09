@@ -29,14 +29,20 @@ const recipientsData = [
   }
 ];
 
-export default function EmergencyRecipients() {
+interface Props {
+  title: string;
+  // TODO: add recipients type of array
+  recipients?: null;
+}
+
+export default function Recipients({ title }: Props) {
   const handleSendMessage = (id: string) => {
     alert(`Send message to recipient ${id}`);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Emergency Recipients</Text>
+      <Text style={styles.heading}>{title}</Text>
 
       <View style={styles.divider} />
 
