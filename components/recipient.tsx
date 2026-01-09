@@ -7,6 +7,7 @@ import {
   Platform,
   ImageSourcePropType
 } from "react-native";
+import { ThemeColors } from "@/constants";
 
 export interface Props {
   id: string;
@@ -50,9 +51,9 @@ const styles = StyleSheet.create({
     padding: 18,
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#2A2A33",
+    backgroundColor: ThemeColors.surfaceBackground,
     borderWidth: 1,
-    borderColor: "#444548",
+    borderColor: ThemeColors.border,
     borderRadius: 18
   },
   avatar: {
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 4,
-    color: "#fff",
+    color: ThemeColors.primaryContent,
     fontSize: 18,
     fontWeight: "600",
     fontFamily: Platform.select({
@@ -76,7 +77,7 @@ const styles = StyleSheet.create({
   },
   address: {
     marginBottom: 8,
-    color: "#DFDFE1",
+    color: ThemeColors.secondaryContent,
     fontSize: 14,
     fontFamily: Platform.select({
       android: "Poppins_400Regular",
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
       android: "Poppins_400Regular",
       ios: "Poppins-Regular"
     }),
-    backgroundColor: "#CFEEF8",
+    backgroundColor: ThemeColors.accent,
     borderRadius: 8
   },
   buttonText: {

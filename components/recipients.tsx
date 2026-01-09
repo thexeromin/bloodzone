@@ -1,4 +1,6 @@
 import { View, Text, StyleSheet, Platform, FlatList } from "react-native";
+import { ThemeColors } from "@/constants";
+
 import Recipient from "./recipient";
 
 // TODO: delete this mock data
@@ -68,7 +70,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     marginBottom: 8,
-    color: "#F5F3F4",
+    color: ThemeColors.secondaryContent,
     fontSize: 20,
     fontFamily: Platform.select({
       android: "Poppins_500Medium",
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 1,
     marginBottom: 16,
-    backgroundColor: "#444548"
+    backgroundColor: ThemeColors.border
   },
   recipientsContainer: {
     gap: 12,

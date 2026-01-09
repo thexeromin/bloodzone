@@ -1,4 +1,6 @@
 import { View, StyleSheet } from "react-native";
+import { ThemeColors } from "@/constants";
+
 import SearchBox from "@/components/search-box";
 import Recipients from "@/components/recipients";
 
@@ -21,6 +23,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 45,
     paddingHorizontal: 20,
-    backgroundColor: "#171717"
+    backgroundColor: ThemeColors.screenBackground
   }
 });

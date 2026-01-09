@@ -9,7 +9,7 @@ import {
   useAuthRequest
 } from "expo-auth-session";
 import { tokenCache } from "@/utils/cache";
-import { BASE_URL } from "@/utils/constants";
+import { BASE_URL } from "@/constants";
 import * as jose from "jose";
 
 WebBrowser.maybeCompleteAuthSession();

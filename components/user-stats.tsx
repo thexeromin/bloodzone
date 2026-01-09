@@ -1,5 +1,6 @@
 import { View, Platform, StyleSheet, Text } from "react-native";
 import { Fontisto } from "@expo/vector-icons";
+import { ThemeColors } from "@/constants";
 
 interface Props {
   donations: number;
@@ -44,9 +45,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#2A2A33",
+    backgroundColor: ThemeColors.surfaceBackground,
     borderWidth: 1,
-    borderColor: "#444548",
+    borderColor: ThemeColors.border,
     borderRadius: 18
   },
   rightColumn: {
@@ -57,13 +58,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#2A2A33",
+    backgroundColor: ThemeColors.surfaceBackground,
     borderWidth: 1,
-    borderColor: "#444548",
+    borderColor: ThemeColors.border,
     borderRadius: 18
   },
   donationsLabel: {
-    color: "#F5F3F4",
+    color: ThemeColors.secondaryContent,
     fontSize: 18,
     fontFamily: Platform.select({
       android: "Poppins_400Regular",
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
     })
   },
   donationsValue: {
-    color: "#FFFFFF",
+    color: ThemeColors.primaryContent,
     fontSize: 44,
     fontFamily: Platform.select({
       android: "Poppins_400Regular",
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
     })
   },
   boxText: {
-    color: "#FFFFFF",
+    color: ThemeColors.primaryContent,
     fontFamily: Platform.select({
       android: "Poppins_400Regular",
       ios: "Poppins-Regular"

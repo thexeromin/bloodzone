@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { View, TextInput, StyleSheet } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { ThemeColors } from "@/constants";
 
 interface SearchBoxProps {
   onSubmitSearch?: (text: string) => void;
@@ -17,12 +18,17 @@ export default function SearchBox({
 
   return (
     <View style={styles.container}>
-      <Ionicons name="search" size={18} color="#FFFFFF" style={styles.icon} />
+      <Ionicons
+        name="search"
+        size={18}
+        color={ThemeColors.primaryContent}
+        style={styles.icon}
+      />
       <TextInput
         value={searchText}
         onChangeText={setSearchText}
         placeholder="Search..."
-        placeholderTextColor="#B0B0B0"
+        placeholderTextColor={ThemeColors.placeholder}
         style={styles.input}
         returnKeyType="search"
         onSubmitEditing={handleSubmit}
@@ -35,10 +41,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2A2A33",
+    backgroundColor: ThemeColors.surfaceBackground,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#444548",
+    borderColor: ThemeColors.border,
     paddingHorizontal: 12,
     height: 44
   },
@@ -47,7 +53,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: "#DFDFE1",
+    color: ThemeColors.secondaryContent,
     fontSize: 14
   }
 });

@@ -1,4 +1,6 @@
 import { View, Text, Platform, StyleSheet } from "react-native";
+import { ThemeColors } from "@/constants";
+
 import UserStats from "@/components/user-stats";
 import Recipients from "@/components/recipients";
 
@@ -19,10 +21,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 45,
     paddingHorizontal: 20,
-    backgroundColor: "#171717"
+    backgroundColor: ThemeColors.screenBackground
   },
   header: {
-    color: "#F5F3F4",
+    color: ThemeColors.primaryContent,
     fontSize: 26,
     fontFamily: Platform.select({
       android: "Poppins_400Regular",
