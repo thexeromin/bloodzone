@@ -1,29 +1,28 @@
-import React from "react";
-
 import { View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ThemeColors } from "@/constants";
+
 import GoogleLoginButton from "@/components/google-login-button";
 
 export default function LoginScreen() {
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.container}>
-        {/* Top Branding */}
-        <View style={styles.header}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>A</Text>
-          </View>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>
-            Sign in to continue to your account
+        <View style={styles.messageBlock}>
+          <Text style={styles.brand}>Lifeline</Text>
+
+          <Text style={styles.headline}>Someone needs blood today.</Text>
+
+          <Text style={styles.subtext}>
+            Lifeline connects donors with real people in critical need.
           </Text>
         </View>
 
-        {/* Bottom Action */}
-        <View style={styles.footer}>
+        <View style={styles.actionBlock}>
           <GoogleLoginButton />
-          <Text style={styles.terms}>
-            By continuing, you agree to our Terms & Privacy Policy
+
+          <Text style={styles.disclaimer}>
+            We only use your information to support blood donation.
           </Text>
         </View>
       </View>
@@ -32,52 +31,47 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#F8FAFC"
+    backgroundColor: ThemeColors.screenBackground
   },
   container: {
     flex: 1,
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 40
+    paddingHorizontal: 28,
+    justifyContent: "space-between"
   },
-  header: {
-    marginTop: 40
+  messageBlock: {
+    marginTop: 96
   },
-  logoCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: "#2563EB",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24
+  brand: {
+    fontSize: 14,
+    letterSpacing: 1.4,
+    textTransform: "uppercase",
+    color: ThemeColors.placeholder,
+    marginBottom: 18
   },
-  logoText: {
-    color: "#FFF",
-    fontSize: 28,
-    fontWeight: "700"
-  },
-  title: {
-    fontSize: 28,
+  headline: {
+    fontSize: 36,
     fontWeight: "700",
-    color: "#0F172A",
-    marginBottom: 8
+    lineHeight: 42,
+    letterSpacing: -0.6,
+    color: ThemeColors.primaryContent,
+    marginBottom: 18
   },
-  subtitle: {
-    fontSize: 16,
-    color: "#64748B",
-    lineHeight: 22
+  subtext: {
+    fontSize: 17,
+    lineHeight: 26,
+    color: ThemeColors.secondaryContent,
+    maxWidth: "92%"
   },
-  footer: {
-    alignItems: "center"
+  actionBlock: {
+    paddingBottom: 28
   },
-  terms: {
-    fontSize: 12,
-    color: "#94A3B8",
-    textAlign: "center",
-    marginTop: 16,
-    lineHeight: 18
+  disclaimer: {
+    marginTop: 20,
+    fontSize: 13,
+    lineHeight: 20,
+    color: ThemeColors.placeholder,
+    textAlign: "center"
   }
 });
