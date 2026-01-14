@@ -21,6 +21,8 @@ const AuthContext = React.createContext({
   fetchWithAuth: (url: string, options: RequestInit) =>
     Promise.resolve(new Response()),
   isLoading: false,
+  isProfileComplete: false,
+  handleProfileComplete: (b: boolean) => {},
   error: null as AuthError | null
 });
 
@@ -41,6 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [refreshToken, setRefreshToken] = React.useState<string | null>(null);
   const [request, response, promptAsync] = useAuthRequest(config, discovery);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isProfileComplete, setIsProfileComplete] = React.useState(false);
   const [error, setError] = React.useState<AuthError | null>(null);
   const refreshInProgressRef = React.useRef(false);
 
@@ -80,6 +83,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
               if (storedRefreshToken) {
                 setRefreshToken(storedRefreshToken);
+              }
+
+              if (
+                (decoded as AuthUser).hasOwnProperty("bloodGroup") &&
+                (decoded as AuthUser).hasOwnProperty("bloodGroup")
+              ) {
+                setIsProfileComplete(true);
               }
 
               setUser(decoded as AuthUser);
@@ -206,6 +216,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.warn("Refreshed token is missing some user fields:", decoded);
         }
 
+        if (
+          (decoded as AuthUser).hasOwnProperty("bloodGroup") &&
+          (decoded as AuthUser).hasOwnProperty("bloodGroup")
+        ) {
+          setIsProfileComplete(true);
+        }
+
         setUser(decoded as AuthUser);
       }
 
@@ -249,6 +266,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Decode the JWT access token to get user information
     if (newAccessToken) {
       const decoded = jose.decodeJwt(newAccessToken);
+
+      if (
+        (decoded as AuthUser).hasOwnProperty("bloodGroup") &&
+        (decoded as AuthUser).hasOwnProperty("bloodGroup")
+      ) {
+        setIsProfileComplete(true);
+      }
       setUser(decoded as AuthUser);
     }
   };
@@ -362,6 +386,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setRefreshToken(null);
   };
 
+  const handleProfileComplete = (flag: boolean) => {
+    setIsProfileComplete(flag);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -369,8 +397,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signIn,
         signOut,
         isLoading,
+        isProfileComplete,
         error,
-        fetchWithAuth
+        fetchWithAuth,
+        handleProfileComplete
       }}
     >
       {children}

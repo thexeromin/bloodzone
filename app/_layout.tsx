@@ -12,7 +12,7 @@ import { useEffect } from "react";
 SplashScreen.preventAutoHideAsync();
 
 function InitialLayout() {
-  const { user } = useAuth();
+  const { user, isProfileComplete } = useAuth();
   const [loaded, error] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium
@@ -30,10 +30,20 @@ function InitialLayout() {
 
   return (
     <Stack>
-      <Stack.Protected guard={user ? true : false}>
+      {/* User is logged in AND profile is complete */}
+      <Stack.Protected guard={!!user && isProfileComplete}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack.Protected>
 
+      {/* User is logged in BUT profile is incomplete */}
+      <Stack.Protected guard={!!user && !isProfileComplete}>
+        <Stack.Screen
+          name="complete-profile"
+          options={{ headerShown: false, title: "Complete Setup" }}
+        />
+      </Stack.Protected>
+
+      {/* User is NOT logged in */}
       <Stack.Protected guard={!user}>
         <Stack.Screen
           name="index"
