@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import {
+  ActivityIndicator,
   View,
   TextInput,
   TouchableOpacity,
@@ -9,17 +10,68 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Colors, ThemeColors } from "@/constants";
+import { useLocation } from "@/hooks";
+import { profileSetup } from "@/services";
+import { useAuth } from "@/context";
 
 interface Props {
   onSignOut: () => void;
 }
 
 export default function UserDetailsForm({ onSignOut }: Props) {
+  const { fetchWithAuth, handleProfileComplete } = useAuth();
+  const { location, address, errorMsg, loading } = useLocation();
+
+  const [bloodGroup, setBloodGroup] = useState("");
+
+  const saveProfile = async () => {
+    if (!address?.formattedAddress || !location?.coords) {
+      alert("Not able to fetch address");
+      return;
+    }
+    try {
+      const data = await profileSetup(fetchWithAuth, {
+        bloodGroup: bloodGroup,
+        address: address.formattedAddress,
+        location: {
+          lat: location?.coords.latitude.toString(),
+          lon: location?.coords.longitude.toString()
+        }
+      });
+      if (data.status === 200) {
+        alert("Success");
+        handleProfileComplete(true);
+      } else {
+        alert("Something went wrong with server call");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>Fetching your location...</Text>
+      </View>
+    );
+  }
+
+  if (errorMsg) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>{errorMsg}</Text>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
       <TextInput
         style={styles.input}
         placeholder="Blood Type (e.g. O+)"
+        value={bloodGroup}
+        onChangeText={(text) => setBloodGroup(text)}
         placeholderTextColor={ThemeColors.placeholder}
       />
 
@@ -27,6 +79,7 @@ export default function UserDetailsForm({ onSignOut }: Props) {
         <TextInput
           style={[styles.input, { flex: 1, marginBottom: 0 }]}
           placeholder="Location"
+          value={address?.formattedAddress || ""}
           placeholderTextColor={ThemeColors.placeholder}
         />
         <TouchableOpacity style={styles.circleButton}>
@@ -40,7 +93,10 @@ export default function UserDetailsForm({ onSignOut }: Props) {
 
       {/* Action Buttons */}
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={[styles.actionButton, styles.saveButton]}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.saveButton]}
+          onPress={saveProfile}
+        >
           <Text style={styles.saveButtonText}>Save Details</Text>
         </TouchableOpacity>
 
@@ -122,5 +178,7 @@ const styles = StyleSheet.create({
       android: "Poppins_400Regular",
       ios: "Poppins-Regular"
     })
-  }
+  },
+
+  errorText: { color: "red", fontSize: 16 }
 });

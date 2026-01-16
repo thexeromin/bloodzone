@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // For native: Try to use the stored access token first
         const storedAccessToken = await tokenCache?.getToken("accessToken");
         const storedRefreshToken = await tokenCache?.getToken("refreshToken");
+        console.log({ storedAccessToken, storedRefreshToken });
 
         console.log(
           "Restoring session - Access token:",
