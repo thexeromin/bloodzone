@@ -1,15 +1,22 @@
 import { View, Text, Platform, StyleSheet } from "react-native";
 import { ThemeColors } from "@/constants";
+import { useAuth } from "@/context";
 
 import UserStats from "@/components/user-stats";
 import Recipients from "@/components/recipients";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Dashboard</Text>
 
-      <UserStats donations={100} bloodType="AB+" lastDonated={20} />
+      <UserStats
+        donations={100}
+        bloodType={user?.bloodGroup || "NULL"}
+        lastDonated={20}
+      />
 
       <Recipients title="Emergency Recipients" />
     </View>

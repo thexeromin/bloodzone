@@ -31,6 +31,20 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="blood-request"
+        options={{
+          title: "Request Blood",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "add-circle" : "add-circle-outline"}
+              color={color}
+              size={24}
+            />
+          )
+        }}
+      />
+
+      <Tabs.Screen
         name="search"
         options={{
           title: "Search",
