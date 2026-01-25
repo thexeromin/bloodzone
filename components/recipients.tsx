@@ -1,46 +1,67 @@
-import { View, Text, StyleSheet, Platform, FlatList } from "react-native";
+import { useState, useEffect } from "react";
+import {
+  Alert,
+  ActivityIndicator,
+  View,
+  Text,
+  StyleSheet,
+  Platform,
+  FlatList
+} from "react-native";
 import { ThemeColors } from "@/constants";
+import { useAuth } from "@/context";
+import { getBloodRequests } from "@/services";
 
 import Recipient from "./recipient";
 
-// TODO: delete this mock data
-const recipientsData = [
-  {
-    id: "1",
-    image: require("@/assets/images/avatar.jpg"),
-    bloodNeed: "Need O+",
-    address: "123 Main Street, New York"
-  },
-  {
-    id: "2",
-    image: require("@/assets/images/avatar.jpg"),
-    bloodNeed: "Need A+",
-    address: "45 Park Avenue, California"
-  },
-  {
-    id: "3",
-    image: require("@/assets/images/avatar.jpg"),
-    bloodNeed: "Need B-",
-    address: "78 Lake View Road, Chicago"
-  },
-  {
-    id: "4",
-    image: require("@/assets/images/avatar.jpg"),
-    bloodNeed: "Need AB+",
-    address: "12 Sunset Boulevard, Los Angeles"
-  }
-];
-
 interface Props {
   title: string;
-  // TODO: add recipients type of array
-  recipients?: null;
+}
+
+interface FeedItem {
+  id: string;
+  image: string;
+  bloodNeed: string;
+  address: string;
 }
 
 export default function Recipients({ title }: Props) {
+  const { fetchWithAuth } = useAuth();
+
+  const [loading, setLoading] = useState(true);
+  const [recipients, setRecipients] = useState<FeedItem[]>([]);
+
+  // TODO: implement messaging
   const handleSendMessage = (id: string) => {
     alert(`Send message to recipient ${id}`);
   };
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const response = await getBloodRequests(fetchWithAuth);
+        const result = await response.json();
+
+        if (result.success && Array.isArray(result.data)) {
+          const formattedData: FeedItem[] = result.data.map((item: any) => ({
+            id: item._id,
+            image: item.user?.avatar || "",
+            bloodNeed: item.bloodType,
+            address: `${item.location}, ${item.city}`
+          }));
+
+          setRecipients(formattedData);
+        }
+      } catch (error) {
+        console.error(error);
+        Alert.alert("Error", "Failed to load feed");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, [fetchWithAuth]);
 
   return (
     <View style={styles.container}>
@@ -49,15 +70,22 @@ export default function Recipients({ title }: Props) {
       <View style={styles.divider} />
 
       {/* Recipients List */}
-      <FlatList
-        data={recipientsData}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Recipient {...item} onSendMessage={handleSendMessage} />
-        )}
-        contentContainerStyle={styles.recipientsContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color={ThemeColors.accent} />
+          <Text>Fetching your location...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={recipients}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <Recipient {...item} onSendMessage={handleSendMessage} />
+          )}
+          contentContainerStyle={styles.recipientsContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </View>
   );
 }

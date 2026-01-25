@@ -13,3 +13,11 @@ export const createBloodRequest = <T>(
     body: JSON.stringify(data)
   });
 };
+
+export const getBloodRequests = (
+  fetcher: (url: string, options: RequestInit) => Promise<Response>
+) => {
+  return fetcher(`${BASE_URL}${ENDPOINTS.BLOOD_REQUESTS}`, {
+    method: "GET"
+  });
+};

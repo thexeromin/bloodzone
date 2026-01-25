@@ -11,7 +11,7 @@ import { ThemeColors } from "@/constants";
 
 export interface Props {
   id: string;
-  image: ImageSourcePropType;
+  image: string;
   bloodNeed: string;
   address: string;
   onSendMessage?: (id: string) => void;
@@ -27,11 +27,11 @@ export default function Recipient({
   return (
     <View style={styles.container}>
       {/* Avatar */}
-      <Image source={image} style={styles.avatar} />
+      <Image source={{ uri: image }} style={styles.avatar} />
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.title}>{bloodNeed}</Text>
+        <Text style={styles.title}>Need {bloodNeed}</Text>
 
         <Text style={styles.address}>{address}</Text>
 
