@@ -15,9 +15,13 @@ export const createBloodRequest = <T>(
 };
 
 export const getBloodRequests = (
-  fetcher: (url: string, options: RequestInit) => Promise<Response>
+  fetcher: (url: string, options: RequestInit) => Promise<Response>,
+  params: URLSearchParams
 ) => {
-  return fetcher(`${BASE_URL}${ENDPOINTS.BLOOD_REQUESTS}`, {
-    method: "GET"
-  });
+  return fetcher(
+    `${BASE_URL}${ENDPOINTS.BLOOD_REQUESTS}?${params.toString()}`,
+    {
+      method: "GET"
+    }
+  );
 };
