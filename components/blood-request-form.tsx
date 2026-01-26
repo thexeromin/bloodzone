@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ActivityIndicator,
   Platform
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
@@ -13,16 +14,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context";
+import { useLocation } from "@/hooks";
 import { createBloodRequest } from "@/services";
 import { ThemeColors, Colors } from "@/constants";
 
 const requestSchema = z.object({
   bloodType: z.string().min(1, "Blood Type is required"),
-  location: z.string().min(3, "Location must be at least 3 chars"),
-  city: z.string().min(2, "City is required"),
+  address: z.string().min(3, "Address is required"),
   phone: z.string().regex(/^[0-9]{10}$/, "Must be a valid 10-digit number"),
-  neededBy: z.date()
+  neededBy: z.date(),
+  // Hidden fields for coordinates
+  latitude: z.number({ error: "Location is required" }),
+  longitude: z.number({ error: "Location is required" })
 });
 
 type RequestFormValues = z.infer<typeof requestSchema>;
@@ -33,11 +38,13 @@ export default function BloodRequestForm() {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const { fetchWithAuth } = useAuth();
+  const { location, address, errorMsg, loading: locLoading } = useLocation();
 
   const {
     control,
     handleSubmit,
     setValue,
+    getValues,
     watch,
     reset,
     formState: { errors, isSubmitting }
@@ -45,15 +52,41 @@ export default function BloodRequestForm() {
     resolver: zodResolver(requestSchema),
     defaultValues: {
       bloodType: "A+",
-      location: "",
-      city: "",
+      address: "",
       phone: "",
-      neededBy: new Date()
+      neededBy: new Date(),
+      latitude: undefined,
+      longitude: undefined
     }
   });
 
   // Watch the date value to display it in the text box
   const selectedDate = watch("neededBy");
+  const lat = watch("latitude");
+
+  useEffect(() => {
+    // If hook provides location, update form hidden fields
+    if (location) {
+      // Assuming location object has latitude/longitude directly.
+      // If it's inside coords, change to location.coords.latitude
+      setValue("latitude", location.coords.latitude, { shouldValidate: true });
+      setValue("longitude", location.coords.longitude, {
+        shouldValidate: true
+      });
+    }
+
+    // If hook provides an address (reverse geocode) and field is empty, auto-fill it
+    if (address && !getValues("address")) {
+      setValue("address", address.formattedAddress || "", {
+        shouldValidate: true
+      });
+    }
+
+    // Handle Error from hook
+    if (errorMsg) {
+      Alert.alert("Location Error", errorMsg);
+    }
+  }, [location, address, errorMsg, setValue, getValues]);
 
   const onSubmit = async (data: RequestFormValues) => {
     try {
@@ -68,7 +101,11 @@ export default function BloodRequestForm() {
         Alert.alert("Success", "Request posted successfully!", [
           { text: "OK" }
         ]);
-        reset();
+        reset({
+          address: address?.formattedAddress || "",
+          longitude: location?.coords.longitude,
+          latitude: location?.coords.latitude
+        });
       } else {
         Alert.alert("Error", result.message || "Something went wrong");
       }
@@ -108,35 +145,53 @@ export default function BloodRequestForm() {
         <Text style={styles.errorText}>{errors.bloodType.message}</Text>
       )}
 
-      {/* Location */}
-      <Text style={styles.label}>Location (Hospital/Area)</Text>
-      <Controller
-        control={control}
-        name="location"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={[styles.input, errors.location && styles.inputError]}
-            placeholder="e.g. Apollo Hospital, Room 204"
-            placeholderTextColor={ThemeColors.placeholder}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
+      {/* --- LOCATION STATUS INDICATOR --- */}
+      <Text style={styles.label}>Location Status</Text>
+      <View
+        style={[
+          styles.locationBadge,
+          lat
+            ? styles.locationSuccess
+            : locLoading
+              ? styles.locationLoading
+              : styles.locationError
+        ]}
+      >
+        {locLoading ? (
+          <ActivityIndicator
+            size="small"
+            color={ThemeColors.accent}
+            style={{ marginRight: 10 }}
+          />
+        ) : (
+          <Ionicons
+            name={lat ? "checkmark-circle" : "alert-circle"}
+            size={20}
+            color={lat ? "white" : ThemeColors.accent}
+            style={{ marginRight: 8 }}
           />
         )}
-      />
-      {errors.location && (
-        <Text style={styles.errorText}>{errors.location.message}</Text>
+        <Text style={[styles.locationText, lat ? { color: "white" } : {}]}>
+          {locLoading
+            ? "Detecting Location..."
+            : lat
+              ? "Location Attached"
+              : "Location Not Found"}
+        </Text>
+      </View>
+      {errors.latitude && (
+        <Text style={styles.errorText}>{errors.latitude.message}</Text>
       )}
 
-      {/* City */}
-      <Text style={styles.label}>City</Text>
+      {/* Address Input (Auto-filled but editable) */}
+      <Text style={styles.label}>Hospital / Address</Text>
       <Controller
         control={control}
-        name="city"
+        name="address"
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
-            style={[styles.input, errors.city && styles.inputError]}
-            placeholder="e.g. Mumbai"
+            style={[styles.input, errors.address && styles.inputError]}
+            placeholder="e.g. Apollo Hospital"
             placeholderTextColor={ThemeColors.placeholder}
             onBlur={onBlur}
             onChangeText={onChange}
@@ -144,8 +199,8 @@ export default function BloodRequestForm() {
           />
         )}
       />
-      {errors.city && (
-        <Text style={styles.errorText}>{errors.city.message}</Text>
+      {errors.address && (
+        <Text style={styles.errorText}>{errors.address.message}</Text>
       )}
 
       {/* Phone */}
@@ -296,6 +351,39 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: Colors.neutral900,
     fontSize: 16,
+    fontFamily: Platform.select({
+      android: "Poppins_500Medium",
+      ios: "Poppins-Medium"
+    })
+  },
+
+  // location styles
+  locationBadge: {
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20
+  },
+  locationLoading: {
+    borderColor: ThemeColors.accent,
+    borderStyle: "dashed",
+    backgroundColor: "rgba(211, 47, 47, 0.05)"
+  },
+  locationSuccess: {
+    borderColor: ThemeColors.surfaceBackground,
+    borderStyle: "solid"
+  },
+  locationError: {
+    borderColor: ThemeColors.dangerPrimary,
+    backgroundColor: "rgba(211, 47, 47, 0.05)"
+  },
+  locationText: {
+    color: ThemeColors.accent,
+    fontSize: 15,
+    fontWeight: "600",
     fontFamily: Platform.select({
       android: "Poppins_500Medium",
       ios: "Poppins-Medium"
