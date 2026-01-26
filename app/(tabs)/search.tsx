@@ -1,12 +1,12 @@
 import { View, StyleSheet } from "react-native";
 import { ThemeColors } from "@/constants";
 
-import EmergencyRecipients from "@/components/recipients";
+import Recipients from "@/components/recipients";
 
 export default function Search() {
   return (
     <View style={styles.container}>
-      <EmergencyRecipients showFilter={true} />
+      <Recipients showFilter={true} />
     </View>
   );
 }

@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
   filterContainer: {
     borderWidth: 1,
     borderColor: ThemeColors.border,
+    backgroundColor: ThemeColors.surfaceBackground,
     borderRadius: 18,
     paddingVertical: 15,
     paddingHorizontal: 15,

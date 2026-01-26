@@ -17,3 +17,22 @@ export const profileSetup = (
     body: JSON.stringify(data)
   });
 };
+
+export const getUserStats = (
+  fetcher: (url: string, options: RequestInit) => Promise<Response>
+) => {
+  return fetcher(`${BASE_URL}${ENDPOINTS.USER_STATS}`, {
+    method: "GET"
+  });
+};
+
+export const logDonation = (
+  fetcher: (url: string, options: RequestInit) => Promise<Response>
+) => {
+  return fetcher(`${BASE_URL}${ENDPOINTS.USER_LOG_DONATION}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+};

@@ -51,10 +51,12 @@ const styles = StyleSheet.create({
     padding: 18,
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: ThemeColors.surfaceBackground,
+    // backgroundColor: ThemeColors.surfaceBackground,
     borderWidth: 1,
     borderColor: ThemeColors.border,
-    borderRadius: 18
+    borderRadius: 18,
+
+    backgroundColor: "transparent"
   },
   avatar: {
     width: 80,
@@ -92,11 +94,13 @@ const styles = StyleSheet.create({
       android: "Poppins_400Regular",
       ios: "Poppins-Regular"
     }),
-    backgroundColor: ThemeColors.accent,
-    borderRadius: 8
+    backgroundColor: ThemeColors.screenBackground,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: ThemeColors.border // Blue Border
   },
   buttonText: {
-    color: "#171717",
+    color: ThemeColors.primaryContent,
     fontSize: 14,
     fontWeight: "500"
   }
