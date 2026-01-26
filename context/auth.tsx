@@ -267,12 +267,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Decode the JWT access token to get user information
     if (newAccessToken) {
       const decoded = jose.decodeJwt(newAccessToken);
-
       if (
         (decoded as AuthUser).hasOwnProperty("bloodGroup") &&
         (decoded as AuthUser).hasOwnProperty("bloodGroup")
       ) {
         setIsProfileComplete(true);
+      } else {
+        setIsProfileComplete(false);
       }
       setUser(decoded as AuthUser);
     }
