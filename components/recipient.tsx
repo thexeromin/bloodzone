@@ -11,6 +11,7 @@ import { ThemeColors } from "@/constants";
 
 export interface Props {
   id: string;
+  user_id: string;
   image: string;
   bloodNeed: string;
   address: string;
@@ -19,6 +20,7 @@ export interface Props {
 
 export default function Recipient({
   id,
+  user_id,
   image,
   bloodNeed,
   address,
@@ -37,7 +39,7 @@ export default function Recipient({
 
         <TouchableOpacity
           style={styles.button}
-          onPress={() => onSendMessage?.(id)}
+          onPress={() => onSendMessage?.(user_id)}
         >
           <Text style={styles.buttonText}>Send Message</Text>
         </TouchableOpacity>

@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import {
   Poppins_400Regular,
   Poppins_500Medium,
+  Poppins_700Bold,
   useFonts
 } from "@expo-google-fonts/poppins";
 import * as SplashScreen from "expo-splash-screen";
@@ -15,7 +16,8 @@ function InitialLayout() {
   const { user, isProfileComplete } = useAuth();
   const [loaded, error] = useFonts({
     Poppins_400Regular,
-    Poppins_500Medium
+    Poppins_500Medium,
+    Poppins_700Bold
   });
 
   useEffect(() => {

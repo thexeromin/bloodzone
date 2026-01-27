@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   View,
@@ -7,12 +8,13 @@ import {
   Platform,
   FlatList,
   TouchableOpacity,
-  RefreshControl
+  RefreshControl,
+  Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemeColors, Colors } from "@/constants";
 import { useAuth } from "@/context";
-import { getBloodRequests } from "@/services";
+import { getBloodRequests, initiateChat } from "@/services";
 
 import Recipient from "./recipient";
 
@@ -23,6 +25,7 @@ interface Props {
 
 interface FeedItem {
   id: string;
+  user_id: string;
   image: string;
   bloodNeed: string;
   address: string;
@@ -33,7 +36,8 @@ const RADIUS_OPTIONS = [5, 10, 20, 50, 100]; // Kilometers
 const BLOOD_GROUPS = ["All", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export default function Recipients({ title, showFilter = false }: Props) {
-  const { fetchWithAuth } = useAuth();
+  const router = useRouter();
+  const { fetchWithAuth, user } = useAuth();
 
   // State
   const [recipients, setRecipients] = useState<FeedItem[]>([]);
@@ -64,6 +68,7 @@ export default function Recipients({ title, showFilter = false }: Props) {
         // Map API response to UI State
         const formattedData: FeedItem[] = result.data.map((item: any) => ({
           id: item._id,
+          user_id: item.user?._id,
           image: item.user?.avatar || "",
           bloodNeed: item.bloodType,
           address: item.address
@@ -79,9 +84,31 @@ export default function Recipients({ title, showFilter = false }: Props) {
     }
   }, [radius, selectedBlood, fetchWithAuth]);
 
-  // TODO: implement messaging
-  const handleSendMessage = (id: string) => {
-    alert(`Send message to recipient ${id}`);
+  const handleSendMessage = async (id: string) => {
+    // alert(`Send message to recipient ${id}`);
+    try {
+      const response = await initiateChat(fetchWithAuth, { targetUserId: id });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Navigate to Chat Room with the room ID
+        const otherUser = result.chatRoom.participants.find(
+          (p: any) => p._id !== user?._id
+        );
+
+        router.push({
+          pathname: `/chat/[id]`,
+          params: {
+            id: `${result.chatRoom._id}`,
+            recipientName: otherUser?.name || "User"
+          }
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Could not start chat");
+    }
   };
 
   // Trigger fetch when Filters change

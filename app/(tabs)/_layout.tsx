@@ -1,8 +1,10 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { ThemeColors } from "@/constants";
 
 export default function TabLayout() {
+  const router = useRouter();
+
   return (
     <Tabs
       screenOptions={{
@@ -26,6 +28,26 @@ export default function TabLayout() {
               color={color}
               size={24}
             />
+          )
+        }}
+      />
+
+      <Tabs.Screen
+        name="chats"
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default action (which is just switching tabs)
+            e.preventDefault();
+
+            // Navigate explicitly to the index (Inbox)
+            // This resets the stack!
+            router.push("/(tabs)/chats/");
+          }
+        })}
+        options={{
+          title: "Chats",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="chatbubbles" size={24} color={color} />
           )
         }}
       />
