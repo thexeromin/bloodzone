@@ -28,7 +28,7 @@ const profileSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface Props {
-  onSignOut: () => void;
+  onSignOut?: () => void;
 }
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
@@ -196,13 +196,15 @@ export default function UserDetailsForm({ onSignOut }: Props) {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionButton, styles.logoutButton]}
-          onPress={onSignOut}
-          disabled={isSubmitting}
-        >
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
+        {onSignOut && (
+          <TouchableOpacity
+            style={[styles.actionButton, styles.logoutButton]}
+            onPress={onSignOut}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

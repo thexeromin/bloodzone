@@ -41,13 +41,17 @@ export default function TabLayout() {
 
             // Navigate explicitly to the index (Inbox)
             // This resets the stack!
-            router.push("/(tabs)/chats/");
+            router.push("/(tabs)/chats");
           }
         })}
         options={{
           title: "Chats",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="chatbubbles" size={24} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "chatbubbles" : "chatbubbles-outline"}
+              size={24}
+              color={color}
+            />
           )
         }}
       />

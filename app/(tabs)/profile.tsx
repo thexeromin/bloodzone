@@ -9,15 +9,26 @@ import {
   ScrollView
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import * as Application from "expo-application";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context";
 import { ThemeColors } from "@/constants";
 
 // Reusable Menu Item Component
-const MenuItem = ({ icon, label, onPress, isDestructive = false }: any) => (
+const MenuItem = ({
+  icon,
+  label,
+  onPress,
+  isDestructive = false,
+  noBorder = false
+}: any) => (
   <TouchableOpacity
-    style={[styles.menuItem, isDestructive && styles.menuItemDestructive]}
+    style={[
+      styles.menuItem,
+      isDestructive && styles.menuItemDestructive,
+      noBorder && { borderBottomWidth: 0 }
+    ]}
     onPress={onPress}
     activeOpacity={0.7}
   >
@@ -47,6 +58,7 @@ const MenuItem = ({ icon, label, onPress, isDestructive = false }: any) => (
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const router = useRouter();
   const appVersion = Application.nativeApplicationVersion;
 
   const handleLogout = () => {
@@ -66,23 +78,15 @@ export default function Profile() {
         {/* --- HEADER --- */}
         <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>Profile</Text>
-          {/* TODO: add setting */}
-          {/*<TouchableOpacity>
-            <Ionicons
-              name="settings-outline"
-              size={24}
-              color={ThemeColors.primaryContent}
-            />
-          </TouchableOpacity>*/}
         </View>
 
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* --- PROFILE INFO --- */}
-          <View style={styles.profileCard}>
-            <View style={styles.avatarWrapper}>
+          {/* --- PROFILE HERO CARD --- */}
+          <View style={styles.profileHero}>
+            <View style={styles.avatarContainer}>
               <Image
                 source={
                   user?.picture
@@ -91,57 +95,51 @@ export default function Profile() {
                 }
                 style={styles.profilePhoto}
               />
-              {/* TODO: update avatar */}
-              {/*<View style={styles.editBadge}>
-                <Ionicons name="pencil" size={12} color="#fff" />
-              </View>*/}
+              {/* Optional: Status Badge */}
+              <View style={styles.statusBadge}>
+                <Ionicons name="checkmark" size={12} color="#fff" />
+              </View>
             </View>
 
-            <Text style={styles.nameText}>{user?.name || "User Name"}</Text>
-            <Text style={styles.emailText}>
-              {user?.email || "user@example.com"}
-            </Text>
+            <View style={styles.userInfo}>
+              <Text style={styles.nameText}>{user?.name || "User Name"}</Text>
+              <Text style={styles.emailText}>
+                {user?.email || "user@example.com"}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.editProfileButton}
+              onPress={() => router.push("/settings/edit-profile")}
+            >
+              <Text style={styles.editProfileText}>Edit Profile</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* --- MENU OPTIONS --- */}
+          {/* Single menu section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>General</Text>
+            <Text style={styles.sectionTitle}>Account Settings</Text>
             <View style={styles.menuGroup}>
-              <MenuItem
-                icon="person-outline"
-                label="Edit Profile"
-                onPress={() => {}}
-              />
               <MenuItem
                 icon="notifications-outline"
                 label="Notifications"
-                onPress={() => {}}
+                onPress={() => router.push("/notifications")}
               />
               <MenuItem
                 icon="shield-checkmark-outline"
                 label="Privacy & Security"
-                onPress={() => {}}
+                onPress={() => router.push("/settings/privacy")}
               />
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Support</Text>
-            <View style={styles.menuGroup}>
               <MenuItem
                 icon="help-buoy-outline"
                 label="Help & Support"
-                onPress={() => {}}
-              />
-              <MenuItem
-                icon="document-text-outline"
-                label="Terms & Policies"
-                onPress={() => {}}
+                onPress={() => router.push("/settings/help")}
+                noBorder={true}
               />
             </View>
           </View>
 
-          {/* --- LOGOUT SECTION --- */}
+          {/* Logout section */}
           <View style={styles.logoutSection}>
             <TouchableOpacity
               style={styles.logoutButtonModern}
@@ -160,12 +158,6 @@ export default function Profile() {
             <Text style={styles.versionText}>Version {appVersion}</Text>
           </View>
         </ScrollView>
-        {/* --- FOOTER --- */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            © {new Date().getFullYear()} Infinity Health Services
-          </Text>
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -186,12 +178,9 @@ const styles = StyleSheet.create({
 
   // Header
   headerContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === "android" ? 25 : 10,
-    paddingBottom: 20
+    paddingTop: Platform.OS === "android" ? 20 : 10,
+    paddingBottom: 10
   },
   headerTitle: {
     fontSize: 28,
@@ -202,14 +191,15 @@ const styles = StyleSheet.create({
     })
   },
 
-  // Profile Card
-  profileCard: {
+  // Profile Hero
+  profileHero: {
     alignItems: "center",
-    marginBottom: 30
+    marginBottom: 30,
+    marginTop: 10
   },
-  avatarWrapper: {
+  avatarContainer: {
     position: "relative",
-    marginBottom: 15
+    marginBottom: 16
   },
   profilePhoto: {
     width: 100,
@@ -218,23 +208,28 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: ThemeColors.surfaceBackground
   },
-  editBadge: {
+  statusBadge: {
     position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: ThemeColors.accent,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    bottom: 2,
+    right: 2,
+    backgroundColor: "#32D74B", // Green success color
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: ThemeColors.screenBackground
   },
+  userInfo: {
+    alignItems: "center",
+    marginBottom: 20
+  },
   nameText: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "600",
     color: ThemeColors.primaryContent,
+    marginBottom: 4,
     fontFamily: Platform.select({
       android: "Poppins_600SemiBold",
       ios: "Poppins-SemiBold"
@@ -242,8 +237,22 @@ const styles = StyleSheet.create({
   },
   emailText: {
     fontSize: 14,
-    color: ThemeColors.secondaryContent,
-    marginTop: 4
+    color: ThemeColors.secondaryContent
+  },
+
+  // Edit Profile Button (Pill Shape)
+  editProfileButton: {
+    backgroundColor: ThemeColors.surfaceBackground,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: ThemeColors.border || "rgba(255,255,255,0.1)"
+  },
+  editProfileText: {
+    color: ThemeColors.primaryContent,
+    fontSize: 14,
+    fontWeight: "600"
   },
 
   // Sections
@@ -255,9 +264,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: ThemeColors.secondaryContent,
-    marginBottom: 10,
+    marginBottom: 12,
     textTransform: "uppercase",
-    letterSpacing: 1
+    letterSpacing: 1,
+    marginLeft: 4
   },
   menuGroup: {
     backgroundColor: ThemeColors.surfaceBackground,
@@ -275,7 +285,7 @@ const styles = StyleSheet.create({
     borderBottomColor: ThemeColors.border || "rgba(255,255,255,0.05)"
   },
   menuItemDestructive: {
-    backgroundColor: ThemeColors.surfaceBackground, // Keep bg consistent or make slightly red
+    backgroundColor: ThemeColors.surfaceBackground,
     borderRadius: 16,
     borderBottomWidth: 0,
     borderWidth: 1,
@@ -309,9 +319,9 @@ const styles = StyleSheet.create({
   // Logout Specific
   logoutSection: {
     paddingHorizontal: 20,
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 20,
-    alignItems: "center" // Center everything
+    alignItems: "center"
   },
   logoutButtonModern: {
     flexDirection: "row",
@@ -319,7 +329,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(255, 69, 58, 0.1)", // Faint Red Background
     paddingVertical: 16,
-    width: "100%", // Full width
+    width: "100%",
     borderRadius: 16,
     borderWidth: 1,
     borderColor: "#FF453A" // Solid Red Border
@@ -336,18 +346,5 @@ const styles = StyleSheet.create({
     color: ThemeColors.secondaryContent,
     fontSize: 12,
     opacity: 0.6
-  },
-
-  // Footer
-  footer: {
-    padding: 20,
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: ThemeColors.border || "rgba(255,255,255,0.05)"
-  },
-  footerText: {
-    color: ThemeColors.secondaryContent,
-    fontSize: 12,
-    opacity: 0.5
   }
 });
