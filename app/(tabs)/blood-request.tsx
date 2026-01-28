@@ -36,12 +36,11 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 5,
-    fontWeight: "bold",
+    fontSize: 28,
     color: ThemeColors.primaryContent,
-    fontSize: 26,
     fontFamily: Platform.select({
-      android: "Poppins_400Regular",
-      ios: "Poppins-Regular"
+      android: "Poppins_700Bold",
+      ios: "Poppins-Bold"
     })
   },
   subHeader: {

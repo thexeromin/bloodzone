@@ -235,7 +235,6 @@ export default function Recipients({ title, showFilter = false }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
     paddingVertical: 16
   },
   heading: {

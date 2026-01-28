@@ -24,11 +24,11 @@ const styles = StyleSheet.create({
     backgroundColor: ThemeColors.screenBackground
   },
   header: {
+    fontSize: 28,
     color: ThemeColors.primaryContent,
-    fontSize: 26,
     fontFamily: Platform.select({
-      android: "Poppins_400Regular",
-      ios: "Poppins-Regular"
+      android: "Poppins_700Bold",
+      ios: "Poppins-Bold"
     })
   }
 });

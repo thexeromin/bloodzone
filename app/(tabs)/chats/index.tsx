@@ -201,8 +201,11 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: ThemeColors.primaryContent
+    color: ThemeColors.primaryContent,
+    fontFamily: Platform.select({
+      android: "Poppins_700Bold",
+      ios: "Poppins-Bold"
+    })
   },
 
   centerContainer: {
