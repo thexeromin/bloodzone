@@ -36,10 +36,9 @@ function InitialLayout() {
       <Stack.Protected guard={!!user && isProfileComplete}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-        <Stack.Screen
-          name="find-donors"
-          options={{ headerShown: false }} // Hides default header so your custom one shows
-        />
+        <Stack.Screen name="find-donors" options={{ headerShown: false }} />
+
+        <Stack.Screen name="my-requests" options={{ headerShown: false }} />
 
         <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
       </Stack.Protected>

@@ -123,36 +123,50 @@ export default function Profile() {
             </View>
           </View>
 
-          {/* Menus */}
+          {/* --- NEW SECTION: ACTIVITIES --- */}
+          <Text style={styles.sectionTitle}>Activities</Text>
+          <View style={styles.menuGroup}>
+            {/* The Management Screen Link */}
+            <ProfileMenuItem
+              icon="list-outline"
+              label="My Requests"
+              onPress={() => router.push("/my-requests")}
+              color={Colors.textMain}
+            />
+            {/* You could add "Donation History" here later */}
+          </View>
+
+          {/* Account Settings */}
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.menuGroup}>
             <ProfileMenuItem
               icon="person-outline"
               label="Personal Details"
               onPress={() => router.push("/settings/edit-profile")}
-              color={Colors.primary}
+              color={Colors.textMain}
             />
             <ProfileMenuItem
               icon="notifications-outline"
               label="Notifications"
               onPress={() => router.push("/notifications")}
-              color={Colors.primary}
+              color={Colors.textMain}
             />
           </View>
 
+          {/* Support */}
           <Text style={styles.sectionTitle}>Support</Text>
           <View style={styles.menuGroup}>
             <ProfileMenuItem
               icon="lock-closed-outline"
               label="Privacy & Security"
               onPress={() => router.push("/settings/privacy")}
-              color={Colors.primary}
+              color={Colors.textMain}
             />
             <ProfileMenuItem
               icon="help-buoy-outline"
               label="Help & Support"
               onPress={() => router.push("/settings/help")}
-              color={Colors.primary}
+              color={Colors.textMain}
             />
           </View>
 
