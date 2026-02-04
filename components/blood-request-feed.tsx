@@ -11,11 +11,39 @@ import {
   Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+
 import { Colors } from "@/constants";
 import { useAuth } from "@/context";
 import { getBloodRequests, initiateChat } from "@/services";
+import { useLocation } from "@/hooks/useLocation"; // <--- Import your hook
 
 import BloodRequestCard from "./blood-request-card";
+
+// Calculate Distance (Haversine Formula)
+const getDistance = (
+  lat1?: number,
+  lon1?: number,
+  lat2?: number,
+  lon2?: number
+) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+
+  const R = 6371; // Radius of earth in km
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) *
+      Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const d = R * c; // Distance in km
+
+  return d.toFixed(1) + " km";
+};
+
+const deg2rad = (deg: number) => deg * (Math.PI / 180);
 
 interface Props {
   showFilter?: boolean;
@@ -35,9 +63,13 @@ export default function BloodRequestFeed({
   const router = useRouter();
   const { fetchWithAuth, user } = useAuth();
 
+  const { location } = useLocation();
+
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Filters
   const [radius, setRadius] = useState(10);
   const [selectedBlood, setSelectedBlood] = useState("All");
 
@@ -48,6 +80,12 @@ export default function BloodRequestFeed({
       params.append("radius", radius.toString());
       if (selectedBlood !== "All") params.append("bloodType", selectedBlood);
 
+      // Pass user location to API if available (for server-side filtering)
+      if (location) {
+        params.append("lat", location.coords.latitude.toString());
+        params.append("lng", location.coords.longitude.toString());
+      }
+
       const response = await getBloodRequests(fetchWithAuth, params);
       const result = await response.json();
 
@@ -56,9 +94,11 @@ export default function BloodRequestFeed({
           id: item._id,
           user_id: item.user?._id,
           image: item.user?.avatar || "",
+          userName: item.user?.name || "Unknown",
           bloodNeed: item.bloodType,
           address: item.address,
-          distance: "2.5 km" // Placeholder calculation
+          locationCoords: item.location?.coordinates, // [lng, lat]
+          createdAt: item.createdAt
         }));
 
         if (limit && data.length > limit) data = data.slice(0, limit);
@@ -70,7 +110,7 @@ export default function BloodRequestFeed({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [radius, selectedBlood, limit, fetchWithAuth]);
+  }, [radius, selectedBlood, limit, fetchWithAuth, location]); // Re-fetch if location loads
 
   useEffect(() => {
     fetchFeed();
@@ -97,10 +137,8 @@ export default function BloodRequestFeed({
     }
   };
 
-  // Filter header
   const FilterHeader = () => (
     <View style={styles.filterWrapper}>
-      {/* Radius Filters */}
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -123,7 +161,6 @@ export default function BloodRequestFeed({
           </TouchableOpacity>
         )}
       />
-      {/* Blood Group Filters */}
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -154,7 +191,6 @@ export default function BloodRequestFeed({
 
   return (
     <View style={styles.container}>
-      {/* Show Filters if requested */}
       {showFilter && <FilterHeader />}
 
       {loading ? (
@@ -166,13 +202,35 @@ export default function BloodRequestFeed({
           data={requests}
           horizontal={horizontal}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View
-              style={horizontal ? styles.horizontalItem : styles.verticalItem}
-            >
-              <BloodRequestCard {...item} onSendMessage={handleContact} />
-            </View>
-          )}
+          renderItem={({ item }) => {
+            let distString = "Unknown";
+
+            if (location && item.locationCoords) {
+              // MongoDB: [Longitude, Latitude]
+              const itemLng = item.locationCoords[0];
+              const itemLat = item.locationCoords[1];
+
+              const d = getDistance(
+                location.coords.latitude,
+                location.coords.longitude,
+                itemLat,
+                itemLng
+              );
+              if (d) distString = d;
+            }
+
+            return (
+              <View
+                style={horizontal ? styles.horizontalItem : styles.verticalItem}
+              >
+                <BloodRequestCard
+                  {...item}
+                  distance={distString} // Pass calculated distance
+                  onSendMessage={handleContact}
+                />
+              </View>
+            );
+          }}
           contentContainerStyle={[
             styles.listContent,
             horizontal ? { paddingLeft: 20 } : { paddingHorizontal: 20 }
@@ -239,8 +297,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600"
   },
-
-  // Empty State
   emptyContainer: { alignItems: "center", marginTop: 50, opacity: 0.6 },
   emptyText: { marginTop: 10, color: Colors.textMuted }
 });
