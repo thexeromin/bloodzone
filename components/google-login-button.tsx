@@ -1,29 +1,22 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context";
-import { Colors, ThemeColors } from "@/constants";
+import { Colors } from "@/constants";
 
 export default function GoogleLoginButton() {
   const { signIn } = useAuth();
 
   return (
-    <Pressable
-      onPress={signIn}
-      style={({ pressed }) => [
-        styles.googleButton,
-        pressed && styles.googlePressed
-      ]}
+    <TouchableOpacity
+      style={styles.googleButton}
+      activeOpacity={0.8}
+      onPress={() => signIn()}
     >
-      <View style={styles.googleIcon}>
-        <Text style={styles.googleIconText}>G</Text>
+      <View style={styles.googleIconWrapper}>
+        <Ionicons name="logo-google" size={20} color="#EA4335" />
       </View>
-
-      <View>
-        <Text style={styles.googlePrimary}>Continue with Google</Text>
-        <Text style={styles.googleSecondary}>
-          Used only for donor verification
-        </Text>
-      </View>
-    </Pressable>
+      <Text style={styles.googleButtonText}>Continue with Google</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -31,38 +24,24 @@ const styles = StyleSheet.create({
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 18,
-    borderRadius: 20,
-    backgroundColor: ThemeColors.surfaceBackground,
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: ThemeColors.border
+    borderColor: Colors.border,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    width: "100%",
+    marginBottom: 25,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5
   },
-  googlePressed: {
-    transform: [{ scale: 0.985 }],
-    opacity: 0.96
-  },
-  googleIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: ThemeColors.primaryContent,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16
-  },
-  googleIconText: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: Colors.neutral900
-  },
-  googlePrimary: {
+  googleIconWrapper: { marginRight: 15 },
+  googleButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: ThemeColors.primaryContent,
-    marginBottom: 2
-  },
-  googleSecondary: {
-    fontSize: 13,
-    color: ThemeColors.placeholder
+    color: Colors.textMain
   }
 });

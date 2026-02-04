@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  Platform,
-  RefreshControl
+  RefreshControl,
+  StatusBar
 } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { ThemeColors } from "@/constants";
+import { Colors } from "@/constants";
 
-// TODO: work on notifications
+// MOCK DATA
 const INITIAL_NOTIFICATIONS = [
   {
     id: "1",
@@ -47,24 +47,35 @@ const INITIAL_NOTIFICATIONS = [
     read: true
   }
 ];
+
 INITIAL_NOTIFICATIONS.length = 0;
 
 export default function NotificationsScreen() {
-  const router = useRouter();
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Helper to get Icon based on type
-  const getIcon = (type: string) => {
+  const getIconData = (type: string) => {
     switch (type) {
       case "alert":
-        return { name: "alert-circle", color: "#FF453A" }; // Red
+        return {
+          name: "alert-circle",
+          color: Colors.error,
+          bg: Colors.errorBg
+        };
       case "success":
-        return { name: "checkmark-circle", color: "#32D74B" }; // Green
+        return {
+          name: "checkmark-circle",
+          color: Colors.success,
+          bg: Colors.successBg
+        };
       case "message":
-        return { name: "chatbubble", color: "#0A84FF" }; // Blue
+        return { name: "chatbubble", color: "#2196F3", bg: "#E3F2FD" }; // Custom Blue
       default:
-        return { name: "information-circle", color: "#FF9F0A" }; // Orange
+        return {
+          name: "information-circle",
+          color: Colors.warning,
+          bg: Colors.warningBg
+        };
     }
   };
 
@@ -75,66 +86,55 @@ export default function NotificationsScreen() {
   };
 
   const markAsRead = (id: string) => {
-    // Optimistic update to remove "unread" dot
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
   };
 
   const renderItem = ({ item }: any) => {
-    const iconData = getIcon(item.type);
+    const { name, color, bg } = getIconData(item.type);
 
     return (
       <TouchableOpacity
-        style={[styles.itemContainer, !item.read && styles.unreadBackground]}
-        activeOpacity={0.7}
+        style={[styles.card, !item.read && styles.unreadCard]}
+        activeOpacity={0.8}
         onPress={() => markAsRead(item.id)}
       >
-        {/* Icon Column */}
-        <View style={styles.iconColumn}>
-          <View
-            style={[
-              styles.iconCircle,
-              { backgroundColor: `${iconData.color}20` }
-            ]}
-          >
-            <Ionicons
-              name={iconData.name as any}
-              size={24}
-              color={iconData.color}
-            />
-          </View>
+        {/* Left: Icon */}
+        <View style={[styles.iconCircle, { backgroundColor: bg }]}>
+          <Ionicons name={name as any} size={22} color={color} />
         </View>
 
-        {/* Text Column */}
-        <View style={styles.textColumn}>
+        {/* Middle: Text */}
+        <View style={styles.textContainer}>
           <View style={styles.headerRow}>
-            <Text style={styles.titleText}>{item.title}</Text>
-            <Text style={styles.timeText}>{item.time}</Text>
+            <Text style={[styles.title, !item.read && styles.unreadTitle]}>
+              {item.title}
+            </Text>
+            <Text style={styles.time}>{item.time}</Text>
           </View>
-          <Text style={styles.bodyText} numberOfLines={2}>
+          <Text style={styles.body} numberOfLines={2}>
             {item.body}
           </Text>
         </View>
 
-        {/* Unread Dot Column */}
-        {!item.read && (
-          <View style={styles.dotColumn}>
-            <View style={styles.unreadDot} />
-          </View>
-        )}
+        {/* Right: Unread Dot */}
+        {!item.read && <View style={styles.unreadDot} />}
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+
       <Stack.Screen
         options={{
           title: "Notifications",
-          headerStyle: { backgroundColor: ThemeColors.screenBackground },
-          headerTintColor: ThemeColors.primaryContent,
+          headerStyle: { backgroundColor: Colors.background },
+          headerTintColor: Colors.textMain,
           headerShadowVisible: false,
+          headerTitleStyle: { fontWeight: "800", fontSize: 20 },
           headerRight: () => (
             <TouchableOpacity onPress={() => setNotifications([])}>
               <Text style={styles.clearText}>Clear All</Text>
@@ -148,11 +148,13 @@ export default function NotificationsScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={ThemeColors.accent}
+            tintColor={Colors.primary}
+            colors={[Colors.primary]}
           />
         }
         ListEmptyComponent={
@@ -161,12 +163,12 @@ export default function NotificationsScreen() {
               <Ionicons
                 name="notifications-off-outline"
                 size={48}
-                color={ThemeColors.secondaryContent}
+                color={Colors.textMuted}
               />
             </View>
             <Text style={styles.emptyTitle}>No Notifications</Text>
             <Text style={styles.emptySubtitle}>
-              You&apos;re all caught up! Check back later for updates.
+              You're all caught up! Check back later.
             </Text>
           </View>
         }
@@ -178,46 +180,55 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: ThemeColors.screenBackground
+    backgroundColor: Colors.background // Soft Grey
   },
   listContent: {
-    paddingVertical: 10
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingBottom: 40
   },
   clearText: {
-    color: ThemeColors.accent,
+    color: Colors.primary,
     fontSize: 14,
     fontWeight: "600"
   },
 
-  // List Item
-  itemContainer: {
+  // Notification Card
+  card: {
     flexDirection: "row",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.border || "rgba(255,255,255,0.05)",
-    alignItems: "flex-start"
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 12,
+    alignItems: "flex-start",
+    // Soft Shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.02)"
   },
-  unreadBackground: {
-    backgroundColor: "rgba(255,255,255,0.02)" // Very subtle highlight for unread
+  unreadCard: {
+    borderColor: Colors.primaryLight, // Subtle border for unread
+    backgroundColor: "#fff" // Keep white bg for cleanliness
   },
 
   // Icon
-  iconColumn: {
-    marginRight: 16,
-    paddingTop: 2 // Align icon with title text
-  },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     justifyContent: "center",
-    alignItems: "center"
+    alignItems: "center",
+    marginRight: 14
   },
 
-  // Text
-  textColumn: {
-    flex: 1
+  // Text Content
+  textContainer: {
+    flex: 1,
+    justifyContent: "center"
   },
   headerRow: {
     flexDirection: "row",
@@ -225,49 +236,50 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 4
   },
-  titleText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: ThemeColors.primaryContent,
+  title: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.textMain,
     flex: 1,
-    marginRight: 10
+    marginRight: 8
   },
-  timeText: {
-    fontSize: 12,
-    color: ThemeColors.secondaryContent,
+  unreadTitle: {
+    fontWeight: "700",
+    color: Colors.textMain
+  },
+  time: {
+    fontSize: 11,
+    color: Colors.textMuted,
     fontWeight: "500"
   },
-  bodyText: {
-    fontSize: 14,
-    color: ThemeColors.secondaryContent,
-    lineHeight: 20
+  body: {
+    fontSize: 13,
+    color: Colors.textSub,
+    lineHeight: 18
   },
 
-  // Unread Dot
-  dotColumn: {
-    justifyContent: "center",
-    marginLeft: 10,
-    paddingTop: 8
-  },
+  // Indicators
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: ThemeColors.accent
+    backgroundColor: Colors.primary,
+    marginTop: 6,
+    marginLeft: 8
   },
 
   // Empty State
   emptyContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 100,
+    marginTop: 100,
     paddingHorizontal: 40
   },
   emptyIconCircle: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: ThemeColors.surfaceBackground,
+    backgroundColor: Colors.surface,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20
@@ -275,12 +287,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    color: ThemeColors.primaryContent,
+    color: Colors.textMain,
     marginBottom: 8
   },
   emptySubtitle: {
     fontSize: 14,
-    color: ThemeColors.secondaryContent,
+    color: Colors.textSub,
     textAlign: "center",
     lineHeight: 22
   }

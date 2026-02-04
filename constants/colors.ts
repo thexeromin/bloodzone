@@ -1,36 +1,47 @@
 export const Colors = {
-  /* Neutral scale */
-  neutral100: "#F5F3F4",
-  neutral300: "#DFDFE1",
-  neutral400: "#B0B0B0",
-  neutral700: "#444548",
-  neutral800: "#2A2A33",
-  neutral900: "#171717",
+  // Brand identity
+  primary: "#D32F2F", // Main Actions, Active Tabs, Primary Buttons (Medical Red)
+  primaryDark: "#B71C1C", // Pressed states, Darker Headers
+  primaryLight: "#FFEBEE", // Light red backgrounds (Tags, Badges, Selected Items)
 
-  /* Danger (semantic) */
-  danger500: "#FF4D4F", // text, icon, outline
-  danger600: "#DB5D53", // button background
+  secondary: "#2196F3", // Secondary Actions, Info Links (Trust Blue)
+  secondaryLight: "#E3F2FD", // Light blue backgrounds
 
-  /* Accent */
-  accentBlue: "#CFEEF8"
-};
+  accent: "#FF5252", // Highlights, Notification dots, "Urgent" markers
 
-export const ThemeColors = {
-  /* Backgrounds */
-  screenBackground: Colors.neutral900,
-  surfaceBackground: Colors.neutral800,
+  // Backgrounds & surfaces
+  background: "#F4F6F9", // Main Screen Background (Soft Cool Grey)
+  surface: "#FFFFFF", // Cards, Modals, Inputs, Bottom Sheets (Pure White)
+  surfaceHighlight: "#F8FAFC", // Slightly highlighted surface (e.g., pressed list item)
 
-  /* Content */
-  primaryContent: Colors.neutral100,
-  secondaryContent: Colors.neutral300,
-  placeholder: Colors.neutral400,
+  // Text & typography
+  textMain: "#1E293B", // Headings, Primary Content (Dark Slate - softer than black)
+  textSub: "#64748B", // Subtitles, Captions, Descriptions (Medium Slate)
+  textMuted: "#94A3B8", // Placeholders, Disabled Text, very subtle details
+  textInverse: "#FFFFFF", // Text on Primary/Dark Backgrounds
 
-  /* Borders */
-  border: Colors.neutral700,
+  // Borders & dividers
+  border: "#E2E8F0", // Standard Borders (Cards, Inputs)
+  borderFocus: "#CBD5E1", // Focused Input Border
 
-  /* Actions */
-  dangerPrimary: Colors.danger600,
-  dangerSecondary: Colors.danger500,
+  // Status indicators
+  success: "#4CAF50", // Completed, Online, Eligible to Donate
+  successBg: "#E8F5E9", // Green Backgrounds (Pills, Alerts)
 
-  accent: Colors.accentBlue
+  warning: "#FF9800", // Pending, Waiting, Recovery Mode
+  warningBg: "#FFF3E0", // Orange Backgrounds
+
+  error: "#EF5350", // Errors, Delete Actions, "Critical Urgency"
+  errorBg: "#FEF2F2", // Red Backgrounds
+
+  info: "#0288D1", // Information alerts
+  infoBg: "#E1F5FE", // Blue Backgrounds
+
+  // Special utils
+  shadow: "#0F172A", // Shadow color for elevation (Dark Blue-Grey)
+  overlay: "rgba(0,0,0,0.5)", // Modal backdrops
+
+  // Gradients (for expo-linear-gradient)
+  gradientPrimary: ["#D32F2F", "#EF5350"] as const,
+  gradientDark: ["#475569", "#64748B"] as const
 };

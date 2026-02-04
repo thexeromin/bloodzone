@@ -8,14 +8,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  StatusBar,
   Keyboard
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, Stack } from "expo-router";
 import io from "socket.io-client";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context";
 import { getMessages } from "@/services";
-import { ThemeColors, BASE_URL as SOCKET_URL, Colors } from "@/constants";
+import { Colors } from "@/constants";
+import { BASE_URL as SOCKET_URL } from "@/constants";
 
 export default function ChatRoom() {
   const { id, recipientName } = useLocalSearchParams();
@@ -25,14 +28,13 @@ export default function ChatRoom() {
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
 
-  // Track keyboard height manually
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const socketRef = useRef<any>(null);
   const flatListRef = useRef<FlatList>(null);
 
+  // Keyboard listeners
   useEffect(() => {
-    // Android Only: Listen to keyboard height changes
     if (Platform.OS === "android") {
       const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
         setKeyboardHeight(e.endCoordinates.height);
@@ -40,6 +42,7 @@ export default function ChatRoom() {
       const hideSub = Keyboard.addListener("keyboardDidHide", () => {
         setKeyboardHeight(0);
       });
+
       return () => {
         showSub.remove();
         hideSub.remove();
@@ -47,24 +50,27 @@ export default function ChatRoom() {
     }
   }, []);
 
+  // Socket
   useEffect(() => {
     socketRef.current = io(SOCKET_URL);
     socketRef.current.emit("join_room", roomId);
-
     socketRef.current.on("receive_message", (msg: any) => {
       setMessages((prev) => [...prev, msg]);
-      setTimeout(
-        () => flatListRef.current?.scrollToEnd({ animated: true }),
-        100
-      );
     });
-
     fetchHistory();
-
     return () => {
       socketRef.current.disconnect();
     };
   }, [roomId]);
+
+  // Auto scroll
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 200);
+    }
+  }, [messages, keyboardHeight]);
 
   const fetchHistory = async () => {
     try {
@@ -72,10 +78,6 @@ export default function ChatRoom() {
       const data = await res.json();
       if (data.success) {
         setMessages(data.data);
-        setTimeout(
-          () => flatListRef.current?.scrollToEnd({ animated: false }),
-          200
-        );
       }
     } catch (e) {
       console.error(e);
@@ -98,7 +100,7 @@ export default function ChatRoom() {
       <View
         style={[
           styles.messageWrapper,
-          isMe ? { alignSelf: "flex-end" } : { alignSelf: "flex-start" }
+          isMe ? styles.alignRight : styles.alignLeft
         ]}
       >
         <View
@@ -112,53 +114,60 @@ export default function ChatRoom() {
     );
   };
 
-  const Content = (
-    <View style={styles.container}>
+  // Added +20 buffer to Android padding to clear the keyboard strip
+  const androidPadding = keyboardHeight > 0 ? keyboardHeight + 20 : 0;
+
+  const ChatContent = (
+    <View
+      style={[
+        styles.innerContainer,
+        { paddingBottom: Platform.OS === "android" ? androidPadding : 0 }
+      ]}
+    >
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item._id || Math.random().toString()}
         renderItem={renderItem}
-        // flex: 1 ensures it takes available space, shrinking when spacer appears
-        style={{ flex: 1 }}
         contentContainerStyle={styles.listContent}
         onContentSizeChange={() =>
           flatListRef.current?.scrollToEnd({ animated: true })
         }
+        onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
+        showsVerticalScrollIndicator={false}
       />
 
-      {/* Input Area */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
           value={text}
           onChangeText={setText}
           placeholder="Message..."
-          placeholderTextColor={ThemeColors.placeholder}
+          placeholderTextColor={Colors.textMuted}
           multiline
         />
-        <TouchableOpacity onPress={sendMessage} style={styles.sendButton}>
-          <Ionicons name="send" size={24} color={ThemeColors.accent} />
+        <TouchableOpacity
+          onPress={sendMessage}
+          style={[styles.sendButton, !text.trim() && styles.sendButtonDisabled]}
+          disabled={!text.trim()}
+        >
+          <Ionicons name="arrow-up" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
-
-      {/* A visible spacer block that sits BELOW the input.
-         When keyboard opens, this grows to 300px, pushing the input UP.
-      */}
-      {Platform.OS === "android" && (
-        <View style={{ height: keyboardHeight + 20 }} />
-      )}
     </View>
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: ThemeColors.screenBackground }}>
+    <View style={{ flex: 1, backgroundColor: Colors.background }}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+
       <Stack.Screen
         options={{
           title: (recipientName as string) || "Chat",
-          headerStyle: { backgroundColor: ThemeColors.screenBackground },
-          headerTintColor: ThemeColors.primaryContent,
-          headerShadowVisible: false
+          headerStyle: { backgroundColor: Colors.background },
+          headerTintColor: Colors.textMain,
+          headerShadowVisible: false,
+          headerTitleStyle: { fontWeight: "700" }
         }}
       />
 
@@ -168,67 +177,87 @@ export default function ChatRoom() {
           behavior="padding"
           keyboardVerticalOffset={100}
         >
-          {Content}
+          <SafeAreaView style={{ flex: 1 }}>{ChatContent}</SafeAreaView>
         </KeyboardAvoidingView>
       ) : (
-        // On Android, we just render Content. The spacer inside does the work.
-        Content
+        <View style={{ flex: 1 }}>{ChatContent}</View>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  innerContainer: {
     flex: 1,
-    backgroundColor: ThemeColors.screenBackground
+    flexDirection: "column",
+    justifyContent: "space-between"
   },
   listContent: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 16,
     paddingBottom: 20,
     paddingTop: 10,
     flexGrow: 1
   },
+  alignRight: { alignSelf: "flex-end" },
+  alignLeft: { alignSelf: "flex-start" },
   messageWrapper: {
     marginVertical: 4,
-    maxWidth: "80%"
+    maxWidth: "75%"
   },
   bubble: {
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 16
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 20
   },
   bubbleMe: {
-    backgroundColor: ThemeColors.accent,
-    borderBottomRightRadius: 2,
-    borderBottomLeftRadius: 16
+    backgroundColor: Colors.primary,
+    borderBottomRightRadius: 4
   },
   bubbleThem: {
-    backgroundColor: ThemeColors.surfaceBackground,
-    borderBottomLeftRadius: 2,
-    borderBottomRightRadius: 16
+    backgroundColor: "#fff",
+    borderBottomLeftRadius: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1
   },
-  textMe: { color: Colors.neutral800, fontSize: 16 },
-  textThem: { color: ThemeColors.primaryContent, fontSize: 16 },
+  textMe: { color: "#fff", fontSize: 15 },
+  textThem: { color: Colors.textMain, fontSize: 15 },
   inputContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
+    alignItems: "flex-end",
+    paddingHorizontal: 12,
     paddingVertical: 10,
+    backgroundColor: Colors.background,
     borderTopWidth: 1,
-    borderColor: ThemeColors.surfaceBackground,
-    backgroundColor: ThemeColors.screenBackground
+    borderTopColor: "rgba(0,0,0,0.05)"
   },
   input: {
     flex: 1,
-    backgroundColor: ThemeColors.surfaceBackground,
-    color: ThemeColors.primaryContent,
-    borderRadius: 25,
-    paddingHorizontal: 15,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 24,
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    fontSize: 16,
-    marginRight: 10,
-    maxHeight: 100
+    paddingTop: 10,
+    fontSize: 15,
+    color: Colors.textMain,
+    maxHeight: 100,
+    marginRight: 8
   },
-  sendButton: { padding: 5 }
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 2
+  },
+  sendButtonDisabled: {
+    backgroundColor: Colors.textMuted,
+    opacity: 0.5
+  }
 });

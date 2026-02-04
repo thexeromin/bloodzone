@@ -1,17 +1,23 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet, StatusBar } from "react-native";
 import { Stack } from "expo-router";
-import { ThemeColors } from "@/constants";
+import { Colors } from "@/constants";
 import UserDetailsForm from "@/components/user-details-form";
 
 export default function EditProfile() {
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+
       <Stack.Screen
         options={{
           title: "Edit Profile",
-          headerStyle: { backgroundColor: ThemeColors.screenBackground },
-          headerTintColor: ThemeColors.primaryContent,
-          headerShadowVisible: false
+          headerStyle: { backgroundColor: Colors.background },
+          headerTintColor: Colors.textMain,
+          headerShadowVisible: false,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 20
+          }
         }}
       />
 
@@ -23,6 +29,7 @@ export default function EditProfile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: ThemeColors.screenBackground
+    backgroundColor: Colors.background,
+    paddingHorizontal: 20 // Add padding so the form isn't stuck to edges
   }
 });

@@ -35,6 +35,13 @@ function InitialLayout() {
       {/* User is logged in AND profile is complete */}
       <Stack.Protected guard={!!user && isProfileComplete}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+        <Stack.Screen
+          name="find-donors"
+          options={{ headerShown: false }} // Hides default header so your custom one shows
+        />
+
+        <Stack.Screen name="chat/[id]" options={{ headerShown: true }} />
       </Stack.Protected>
 
       {/* User is logged in BUT profile is incomplete */}

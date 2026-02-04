@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Alert,
-  ActivityIndicator,
-  Platform
+  ActivityIndicator
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context";
 import { getUserStats, logDonation } from "@/services";
-import { ThemeColors, Colors } from "@/constants";
+import { Colors } from "@/constants";
 
 export default function UserStats() {
   const { fetchWithAuth } = useAuth();
@@ -23,19 +23,45 @@ export default function UserStats() {
   });
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [daysRemaining, setDaysRemaining] = useState(0);
 
-  // 1. Fetch Stats on Mount
+  // Fetch stats
   useEffect(() => {
     fetchStats();
   }, []);
+
+  // Calculate eligibility
+  useEffect(() => {
+    if (stats.lastDonated) {
+      const lastDate = new Date(stats.lastDonated);
+      const today = new Date();
+
+      // Standard rule: 3 months (approx 90 days) is safer for whole blood,
+      // but if your rule is 30 days, keep it as is.
+      const nextEligibleDate = new Date(lastDate);
+      nextEligibleDate.setDate(lastDate.getDate() + 56); // Standard is 56 days (8 weeks)
+
+      const diffTime = nextEligibleDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      setDaysRemaining(diffDays > 0 ? diffDays : 0);
+    } else {
+      setDaysRemaining(0);
+    }
+  }, [stats.lastDonated]);
+
+  const isEligible = daysRemaining <= 0;
 
   const fetchStats = async () => {
     try {
       const res = await getUserStats(fetchWithAuth);
       const data = await res.json();
       if (data.success) {
-        console.log(data.data);
-        setStats(data.data);
+        setStats({
+          bloodGroup: data.data.bloodGroup || "N/A",
+          totalDonation: data.data.totalDonation || 0,
+          lastDonated: data.data.lastDonated || null
+        });
       }
     } catch (error) {
       console.error("Failed to fetch stats", error);
@@ -44,7 +70,6 @@ export default function UserStats() {
     }
   };
 
-  // 2. Handle "I Donated" Click
   const handleDonationClick = () => {
     Alert.alert(
       "Confirm Donation",
@@ -66,10 +91,9 @@ export default function UserStats() {
       const result = await res.json();
 
       if (result.success) {
-        // Update local state immediately
         setStats((prev) => ({
           ...prev,
-          totalDonations: result.data.totalDonations,
+          totalDonation: result.data.totalDonations, // Ensure this matches API key
           lastDonated: result.data.lastDonated
         }));
         Alert.alert("Thank You!", "Your donation has been recorded.");
@@ -83,154 +107,192 @@ export default function UserStats() {
     }
   };
 
-  if (loading) return <ActivityIndicator color={ThemeColors.accent} />;
-
-  // Helper to format date
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Never";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    });
-  };
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator color={Colors.primary} size="small" />
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        {/* Top Row: 3 Stats Columns */}
-        <View style={styles.statsRow}>
-          {/* Stat 1: Blood Group */}
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{stats.bloodGroup}</Text>
-            <Text style={styles.statLabel}>Blood Group</Text>
+    <View>
+      <View style={styles.heroContainer}>
+        <LinearGradient
+          colors={isEligible ? ["#D32F2F", "#EF5350"] : ["#475569", "#64748B"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.heroGradient}
+        >
+          <View style={styles.heroTop}>
+            <View style={styles.statusPill}>
+              <Ionicons
+                name={isEligible ? "checkmark-circle" : "hourglass"}
+                size={14}
+                color="#fff"
+              />
+              <Text style={styles.statusPillText}>
+                {isEligible ? "Ready to Donate" : "Recovery Mode"}
+              </Text>
+            </View>
+            <Ionicons
+              name="heart-circle"
+              size={40}
+              color="rgba(255,255,255,0.2)"
+            />
           </View>
 
-          <View style={styles.divider} />
+          <Text style={styles.heroMainText}>
+            {isEligible
+              ? "Your donation can save 3 lives today."
+              : `Next donation eligible in ${daysRemaining} days.`}
+          </Text>
 
-          {/* Stat 2: Donations */}
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: ThemeColors.accent }]}>
-              {stats.totalDonation}
-            </Text>
-            <Text style={styles.statLabel}>Donated</Text>
-          </View>
+          {isEligible ? (
+            <TouchableOpacity
+              style={styles.actionBtnWhite}
+              onPress={() => handleDonationClick()}
+              disabled={updating}
+            >
+              <Text style={styles.actionBtnTextRed}>I Donated Today</Text>
+            </TouchableOpacity>
+          ) : (
+            // Simple progress bar visualization
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: "10%" }]} />
+            </View>
+          )}
+        </LinearGradient>
+      </View>
 
-          <View style={styles.divider} />
-
-          {/* Stat 3: Last Date */}
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { fontSize: 16, marginTop: 4 }]}>
-              {formatDate(stats.lastDonated)}
-            </Text>
-            <Text style={styles.statLabel}>Last Date</Text>
-          </View>
+      {/* --- STATS OVERVIEW (NOW DYNAMIC) --- */}
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          {/* 1. Real Blood Group */}
+          <Text style={styles.statValue}>{stats.bloodGroup}</Text>
+          <Text style={styles.statLabel}>Blood Type</Text>
         </View>
 
-        {/* Bottom Row: Action Button */}
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleDonationClick}
-          disabled={updating}
-        >
-          {updating ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <>
-              <Ionicons
-                name="add-circle-outline"
-                size={20}
-                color={Colors.neutral900}
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.buttonText}>I Donated Today</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        <View style={styles.statCard}>
+          {/* 2. Real Total Donations */}
+          <Text style={styles.statValue}>
+            {stats.totalDonation < 10
+              ? `0${stats.totalDonation}`
+              : stats.totalDonation}
+          </Text>
+          <Text style={styles.statLabel}>Donations</Text>
+        </View>
+
+        <View style={styles.statCard}>
+          {/* 3. Real Lives Saved (Total * 3) */}
+          <Text style={styles.statValue}>{stats.totalDonation * 3}</Text>
+          <Text style={styles.statLabel}>Lives Saved</Text>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginVertical: 20
-  },
   loaderContainer: {
     padding: 20,
-    justifyContent: "center",
     alignItems: "center"
   },
-  card: {
-    backgroundColor: ThemeColors.surfaceBackground,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: ThemeColors.border,
-    // Dark Shadow logic
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 4
+  heroContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 25
   },
+  heroGradient: {
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 8
+  },
+  heroTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 15
+  },
+  statusPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.2)",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20
+  },
+  statusPillText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 6
+  },
+  heroMainText: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
+    lineHeight: 30,
+    maxWidth: "90%",
+    marginBottom: 20
+  },
+  actionBtnWhite: {
+    backgroundColor: "#fff",
+    alignSelf: "flex-start",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12
+  },
+  actionBtnTextRed: {
+    color: Colors.primary,
+    fontWeight: "bold",
+    fontSize: 14
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    borderRadius: 3,
+    width: "100%"
+  },
+  progressBarFill: {
+    height: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 3
+  },
+
+  // Stats Row
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 25
+    paddingHorizontal: 20,
+    marginBottom: 30
   },
-  statItem: {
+  statCard: {
     flex: 1,
-    alignItems: "center"
-  },
-  divider: {
-    width: 1,
-    height: 40,
-    backgroundColor: ThemeColors.border
+    backgroundColor: Colors.surface,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    marginHorizontal: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 2
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: ThemeColors.primaryContent,
-    marginBottom: 4,
-    fontFamily: Platform.select({
-      android: "Poppins_500Medium",
-      ios: "Poppins-Medium"
-    })
-  },
-  statValueSmall: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: ThemeColors.primaryContent,
-    marginTop: 6,
-    marginBottom: 2,
-    fontFamily: Platform.select({
-      android: "Poppins_500Medium",
-      ios: "Poppins-Medium"
-    })
+    fontSize: 20,
+    fontWeight: "800",
+    color: Colors.textMain,
+    marginBottom: 4
   },
   statLabel: {
-    fontSize: 12,
-    color: ThemeColors.secondaryContent,
-    textTransform: "uppercase",
-    letterSpacing: 0.5
-  },
-  actionButton: {
-    backgroundColor: ThemeColors.accent,
-    borderRadius: 25,
-    height: 50,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center"
-  },
-  buttonText: {
-    color: Colors.neutral900,
-    fontSize: 16,
-    fontWeight: "600",
-    fontFamily: Platform.select({
-      android: "Poppins_500Medium",
-      ios: "Poppins-Medium"
-    })
+    fontSize: 11,
+    color: Colors.textSub,
+    fontWeight: "500",
+    textTransform: "uppercase"
   }
 });

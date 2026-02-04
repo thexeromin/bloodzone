@@ -1,17 +1,16 @@
-import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert
+  Alert,
+  StatusBar
 } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { ThemeColors } from "@/constants";
+import { Colors } from "@/constants";
 
-// Simple Action Row Component
 const ActionItem = ({
   icon,
   title,
@@ -26,12 +25,17 @@ const ActionItem = ({
   >
     <View style={styles.leftContent}>
       <View
-        style={[styles.iconContainer, isDestructive && styles.iconDestructive]}
+        style={[
+          styles.iconBox,
+          {
+            backgroundColor: isDestructive ? Colors.errorBg : Colors.background
+          }
+        ]}
       >
         <Ionicons
           name={icon}
           size={20}
-          color={isDestructive ? "#FF453A" : ThemeColors.accent}
+          color={isDestructive ? Colors.error : Colors.primary}
         />
       </View>
       <Text style={[styles.itemTitle, isDestructive && styles.textDestructive]}>
@@ -39,14 +43,8 @@ const ActionItem = ({
       </Text>
     </View>
 
-    {/* Arrow Icon only for non-destructive actions */}
     {!isDestructive && (
-      <Ionicons
-        name="chevron-forward"
-        size={20}
-        color={ThemeColors.secondaryContent}
-        style={{ opacity: 0.5 }}
-      />
+      <Ionicons name="chevron-forward" size={16} color={Colors.border} />
     )}
   </TouchableOpacity>
 );
@@ -68,18 +66,20 @@ export default function PrivacyScreen() {
   };
 
   const openLink = (url: string) => {
-    // For now, just alerts. TODO: Linking.openURL('https://our-website.com/privacy');
     Alert.alert("Link Opened", `Would open: ${url}`);
   };
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+
       <Stack.Screen
         options={{
           title: "Privacy & Security",
-          headerStyle: { backgroundColor: ThemeColors.screenBackground },
-          headerTintColor: ThemeColors.primaryContent,
-          headerShadowVisible: false
+          headerStyle: { backgroundColor: Colors.background },
+          headerTintColor: Colors.textMain,
+          headerShadowVisible: false,
+          headerTitleStyle: { fontWeight: "800", fontSize: 20 }
         }}
       />
 
@@ -88,17 +88,17 @@ export default function PrivacyScreen() {
           Review our policies or manage your account data.
         </Text>
 
-        {/* Section legal */}
+        {/* Section: Legal */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Legal</Text>
-          <View style={styles.sectionBody}>
+          <View style={styles.card}>
             <ActionItem
               icon="document-text-outline"
               title="Terms of Service"
               onPress={() => openLink("https://example.com/terms")}
             />
             <ActionItem
-              icon="shield-outline"
+              icon="shield-checkmark-outline"
               title="Privacy Policy"
               onPress={() => openLink("https://example.com/privacy")}
             />
@@ -111,10 +111,10 @@ export default function PrivacyScreen() {
           </View>
         </View>
 
-        {/* Section account */}
+        {/* Section: Account */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Account</Text>
-          <View style={styles.sectionBody}>
+          <Text style={styles.sectionHeader}>Account Data</Text>
+          <View style={styles.card}>
             <ActionItem
               icon="trash-outline"
               title="Delete Account"
@@ -124,7 +124,8 @@ export default function PrivacyScreen() {
             />
           </View>
           <Text style={styles.footerNote}>
-            Deleting your account will remove all your data from our servers.
+            Deleting your account will immediately remove all your data from our
+            servers.
           </Text>
         </View>
       </ScrollView>
@@ -135,73 +136,79 @@ export default function PrivacyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: ThemeColors.screenBackground
+    backgroundColor: Colors.background
   },
   scrollContent: {
-    padding: 20
+    padding: 20,
+    paddingBottom: 40
   },
   headerDescription: {
-    color: ThemeColors.secondaryContent,
+    color: Colors.textSub,
     marginBottom: 25,
-    fontSize: 14
+    fontSize: 14,
+    lineHeight: 20
   },
+
   section: {
     marginBottom: 30
   },
   sectionHeader: {
-    color: ThemeColors.secondaryContent,
+    color: Colors.textSub,
     textTransform: "uppercase",
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: "700",
     marginBottom: 10,
     letterSpacing: 1,
-    marginLeft: 5
+    marginLeft: 10
   },
-  sectionBody: {
-    backgroundColor: ThemeColors.surfaceBackground,
-    borderRadius: 16,
-    overflow: "hidden"
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    overflow: "hidden",
+    // Clean Shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.02)"
   },
   footerNote: {
     marginTop: 10,
     fontSize: 12,
-    color: ThemeColors.secondaryContent,
-    marginLeft: 5,
-    opacity: 0.7
+    color: Colors.textMuted,
+    marginLeft: 10,
+    lineHeight: 18
   },
 
-  // Item Styles
   itemContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.border || "rgba(255,255,255,0.05)"
+    borderBottomColor: Colors.border
   },
   leftContent: {
     flexDirection: "row",
     alignItems: "center"
   },
-  iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.05)",
+  iconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12
-  },
-  iconDestructive: {
-    backgroundColor: "rgba(255, 69, 58, 0.1)"
+    marginRight: 14
   },
   itemTitle: {
-    fontSize: 16,
-    color: ThemeColors.primaryContent,
-    fontWeight: "500"
+    fontSize: 15,
+    color: Colors.textMain,
+    fontWeight: "600"
   },
   textDestructive: {
-    color: "#FF453A"
+    color: Colors.error
   }
 });

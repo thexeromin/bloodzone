@@ -1,6 +1,7 @@
 import { Tabs, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { ThemeColors } from "@/constants";
+import { Colors } from "@/constants";
+import { Platform } from "react-native";
 
 export default function TabLayout() {
   const router = useRouter();
@@ -9,48 +10,48 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: {
-          backgroundColor: ThemeColors.screenBackground,
-          borderTopWidth: 0
-        },
         tabBarShowLabel: false,
-        tabBarActiveTintColor: ThemeColors.dangerSecondary,
-        tabBarInactiveTintColor: ThemeColors.secondaryContent
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: "#94A3B8", // Soft Grey
+
+        tabBarStyle: {
+          backgroundColor: "#FFFFFF",
+          borderTopWidth: 0,
+          height: Platform.OS === "ios" ? 85 : 65,
+          paddingTop: Platform.OS === "ios" ? 10 : 0,
+
+          // Shadow styling (Floating Effect)
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 10,
+          elevation: 8 // Android Shadow
+        }
       }}
     >
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: "Dashboard",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused, color }) => (
             <Ionicons
-              name={focused ? "home-sharp" : "home-outline"}
+              name={focused ? "grid" : "grid-outline"}
+              size={22}
               color={color}
-              size={24}
             />
           )
         }}
       />
 
       <Tabs.Screen
-        name="chats"
-        listeners={({ navigation }) => ({
-          tabPress: (e) => {
-            // Prevent default action (which is just switching tabs)
-            e.preventDefault();
-
-            // Navigate explicitly to the index (Inbox)
-            // This resets the stack!
-            router.push("/(tabs)/chats");
-          }
-        })}
+        name="donate"
         options={{
-          title: "Chats",
+          title: "Donate",
           tabBarIcon: ({ color, focused }) => (
+            // CHANGED: 'water' looks exactly like a blood drop
             <Ionicons
-              name={focused ? "chatbubbles" : "chatbubbles-outline"}
-              size={24}
+              name={focused ? "water" : "water-outline"}
               color={color}
+              size={24}
             />
           )
         }}
@@ -71,14 +72,23 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="search"
+        name="chats"
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Prevent default action (which is just switching tabs)
+            e.preventDefault();
+
+            // Navigate explicitly to the index (Inbox)
+            // This resets the chatting
+            router.push("/(tabs)/chats");
+          }
+        })}
         options={{
-          title: "Search",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused, color }) => (
             <Ionicons
-              name={focused ? "search" : "search-outline"}
-              color={color}
+              name={focused ? "chatbubbles" : "chatbubbles-outline"}
               size={24}
+              color={color}
             />
           )
         }}
@@ -87,12 +97,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}
-              color={color}
               size={24}
+              color={color}
             />
           )
         }}

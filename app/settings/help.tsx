@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -6,30 +6,19 @@ import {
   ScrollView,
   TouchableOpacity,
   LayoutAnimation,
-  Platform,
-  UIManager,
-  Linking,
-  Alert
+  Alert,
+  StatusBar
 } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { Colors, ThemeColors } from "@/constants";
+import { Colors } from "@/constants";
 
-// Enable LayoutAnimation for Android
-if (
-  Platform.OS === "android" &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-// --- DUMMY FAQ DATA ---
 const FAQS = [
   {
     id: 1,
     question: "How do I request blood?",
     answer:
-      "Go to the Home tab and tap the '+' button. Fill out the request form with patient details and blood type needed. Your request will be broadcast to nearby donors."
+      "Go to the Search tab to find nearby donors or create a new request from your Dashboard. Your request will be broadcast to donors within a specific radius."
   },
   {
     id: 2,
@@ -41,32 +30,33 @@ const FAQS = [
     id: 3,
     question: "How do I verify my donor status?",
     answer:
-      "Navigate to your Profile > Edit Profile and upload your latest donation certificate or medical ID. Our team will verify it within 24 hours."
+      "Navigate to your Profile > Edit Profile and upload your latest donation certificate. Our team will verify it within 24 hours."
   },
   {
     id: 4,
     question: "Can I chat with donors?",
     answer:
-      "Yes! Once a donor accepts your request, a chat room is automatically created in your 'Chats' tab so you can coordinate safely."
+      "Yes! Once a donor accepts your request, a secure chat room is automatically created in your 'Messages' tab so you can coordinate safely."
   }
 ];
 
-// Accordion Component
 const AccordionItem = ({ item, expanded, onPress, noBorder = false }: any) => {
   return (
     <View
       style={[styles.accordionContainer, noBorder && { borderBottomWidth: 0 }]}
     >
       <TouchableOpacity
-        style={[styles.accordionHeader]}
+        style={styles.accordionHeader}
         onPress={onPress}
         activeOpacity={0.7}
       >
-        <Text style={styles.questionText}>{item.question}</Text>
+        <Text style={[styles.questionText, expanded && styles.questionActive]}>
+          {item.question}
+        </Text>
         <Ionicons
           name={expanded ? "chevron-up" : "chevron-down"}
-          size={20}
-          color={ThemeColors.accent}
+          size={18}
+          color={expanded ? Colors.primary : Colors.textSub}
         />
       </TouchableOpacity>
 
@@ -88,7 +78,6 @@ export default function HelpScreen() {
   };
 
   const handleContactSupport = () => {
-    // In a real app: Linking.openURL('mailto:support@infinityhealth.com')
     Alert.alert(
       "Support Contacted",
       "This would open your email app to contact support@infinityhealth.com"
@@ -97,12 +86,15 @@ export default function HelpScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+
       <Stack.Screen
         options={{
           title: "Help & Support",
-          headerStyle: { backgroundColor: ThemeColors.screenBackground },
-          headerTintColor: ThemeColors.primaryContent,
-          headerShadowVisible: false
+          headerStyle: { backgroundColor: Colors.background },
+          headerTintColor: Colors.textMain,
+          headerShadowVisible: false,
+          headerTitleStyle: { fontWeight: "800", fontSize: 20 }
         }}
       />
 
@@ -110,10 +102,10 @@ export default function HelpScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* --- HERO SECTION --- */}
+        {/* Hero section */}
         <View style={styles.heroSection}>
           <View style={styles.iconCircle}>
-            <Ionicons name="help-buoy" size={40} color={ThemeColors.accent} />
+            <Ionicons name="help-buoy" size={42} color={Colors.primary} />
           </View>
           <Text style={styles.heroTitle}>How can we help?</Text>
           <Text style={styles.heroSubtitle}>
@@ -121,21 +113,21 @@ export default function HelpScreen() {
           </Text>
         </View>
 
-        {/* --- FAQ SECTION --- */}
+        {/* Faq section */}
         <Text style={styles.sectionHeader}>Frequently Asked Questions</Text>
-        <View style={styles.faqList}>
+        <View style={styles.faqCard}>
           {FAQS.map((faq, index) => (
             <AccordionItem
               key={faq.id}
               item={faq}
               expanded={expandedId === faq.id}
-              noBorder={index === FAQS.length - 1 ? true : false}
+              noBorder={index === FAQS.length - 1}
               onPress={() => toggleExpand(faq.id)}
             />
           ))}
         </View>
 
-        {/* --- CONTACT SECTION --- */}
+        {/* Contact section */}
         <Text style={styles.sectionHeader}>Still need help?</Text>
         <View style={styles.contactCard}>
           <View style={styles.contactInfo}>
@@ -147,12 +139,13 @@ export default function HelpScreen() {
           <TouchableOpacity
             style={styles.contactButton}
             onPress={handleContactSupport}
+            activeOpacity={0.8}
           >
             <Text style={styles.contactButtonText}>Email Us</Text>
           </TouchableOpacity>
         </View>
 
-        {/* --- FOOTER LINKS --- */}
+        {/* Footer links */}
         <View style={styles.footerLinks}>
           <TouchableOpacity onPress={() => console.log("Website")}>
             <Text style={styles.linkText}>Visit Website</Text>
@@ -170,97 +163,109 @@ export default function HelpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: ThemeColors.screenBackground
+    backgroundColor: Colors.background
   },
   scrollContent: {
     padding: 20,
     paddingBottom: 40
   },
 
-  // Hero
   heroSection: {
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 35,
     marginTop: 10
   },
   iconCircle: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: ThemeColors.surfaceBackground,
+    backgroundColor: Colors.primaryLight,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15
+    marginBottom: 16
   },
   heroTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: ThemeColors.primaryContent,
+    color: Colors.textMain,
     marginBottom: 8
   },
   heroSubtitle: {
     fontSize: 14,
-    color: ThemeColors.secondaryContent,
+    color: Colors.textSub,
     textAlign: "center",
     maxWidth: "80%",
     lineHeight: 20
   },
 
-  // Headers
   sectionHeader: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: ThemeColors.secondaryContent,
+    fontSize: 12,
+    fontWeight: "700",
+    color: Colors.textSub,
     textTransform: "uppercase",
     letterSpacing: 1,
-    marginBottom: 15,
-    marginTop: 10,
-    marginLeft: 5
+    marginBottom: 12,
+    marginLeft: 10
   },
 
-  // FAQ Accordion
-  faqList: {
-    marginBottom: 30,
-    borderRadius: 16,
+  faqCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
     overflow: "hidden",
-    backgroundColor: ThemeColors.surfaceBackground
+    marginBottom: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.02)"
   },
   accordionContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.border || "rgba(255,255,255,0.05)"
+    borderBottomColor: Colors.border
   },
   accordionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 16
+    paddingVertical: 18,
+    paddingHorizontal: 16
   },
   questionText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: ThemeColors.primaryContent,
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.textMain,
     flex: 1,
     marginRight: 10
   },
+  questionActive: {
+    color: Colors.primary
+  },
   accordionBody: {
     paddingHorizontal: 16,
-    paddingBottom: 16
+    paddingBottom: 20,
+    paddingTop: 0
   },
   answerText: {
     fontSize: 14,
-    color: ThemeColors.secondaryContent,
+    color: Colors.textSub,
     lineHeight: 22
   },
 
-  // Contact Card
   contactCard: {
-    backgroundColor: ThemeColors.surfaceBackground,
-    borderRadius: 16,
+    backgroundColor: "#fff",
+    borderRadius: 20,
     padding: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 30
+    marginBottom: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2
   },
   contactInfo: {
     flex: 1
@@ -268,39 +273,39 @@ const styles = StyleSheet.create({
   contactTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: ThemeColors.primaryContent,
+    color: Colors.textMain,
     marginBottom: 4
   },
   contactSubtitle: {
-    fontSize: 12,
-    color: ThemeColors.secondaryContent
+    fontSize: 13,
+    color: Colors.textMuted
   },
   contactButton: {
-    backgroundColor: ThemeColors.accent,
+    backgroundColor: Colors.textMain,
     paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8
+    paddingHorizontal: 18,
+    borderRadius: 12
   },
   contactButtonText: {
-    color: Colors.neutral800,
+    color: "#fff",
     fontWeight: "600",
-    fontSize: 14
+    fontSize: 13
   },
 
-  // Footer
   footerLinks: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 10
+    marginTop: 10,
+    opacity: 0.7
   },
   linkText: {
-    color: ThemeColors.accent,
-    fontSize: 14,
+    color: Colors.textMain,
+    fontSize: 13,
     fontWeight: "500"
   },
   dot: {
-    color: ThemeColors.secondaryContent,
+    color: Colors.textMuted,
     marginHorizontal: 10
   }
 });

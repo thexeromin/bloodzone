@@ -36,3 +36,14 @@ export const logDonation = (
     }
   });
 };
+
+export const findDonors = (
+  fetcher: (url: string, options: RequestInit) => Promise<Response>,
+  params?: URLSearchParams | string
+) => {
+  const queryString = params ? `?${params.toString()}` : "";
+
+  return fetcher(`${BASE_URL}${ENDPOINTS.FIND_DONORS}${queryString}`, {
+    method: "GET"
+  });
+};

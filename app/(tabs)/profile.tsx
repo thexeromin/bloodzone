@@ -3,80 +3,71 @@ import {
   View,
   Text,
   StyleSheet,
-  Platform,
   TouchableOpacity,
   Alert,
-  ScrollView
+  ScrollView,
+  StatusBar
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import * as Application from "expo-application";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context";
-import { ThemeColors } from "@/constants";
+import { Colors } from "@/constants";
 
-// Reusable Menu Item Component
-const MenuItem = ({
+const ProfileMenuItem = ({
   icon,
   label,
   onPress,
-  isDestructive = false,
-  noBorder = false
+  isDestructive,
+  color = Colors.textMain
 }: any) => (
   <TouchableOpacity
-    style={[
-      styles.menuItem,
-      isDestructive && styles.menuItemDestructive,
-      noBorder && { borderBottomWidth: 0 }
-    ]}
+    style={styles.menuItem}
     onPress={onPress}
     activeOpacity={0.7}
   >
     <View
       style={[
-        styles.iconContainer,
-        isDestructive ? styles.iconDestructive : styles.iconNeutral
+        styles.iconBox,
+        { backgroundColor: isDestructive ? Colors.errorBg : Colors.background }
       ]}
     >
       <Ionicons
         name={icon}
         size={20}
-        color={isDestructive ? "#FF453A" : ThemeColors.accent}
+        color={isDestructive ? Colors.error : color}
       />
     </View>
-    <Text style={[styles.menuText, isDestructive && styles.textDestructive]}>
+    <Text style={[styles.menuLabel, isDestructive && { color: Colors.error }]}>
       {label}
     </Text>
-    <Ionicons
-      name="chevron-forward"
-      size={18}
-      color={ThemeColors.secondaryContent}
-      style={{ opacity: 0.5 }}
-    />
+    <Ionicons name="chevron-forward" size={16} color={Colors.border} />
   </TouchableOpacity>
 );
 
 export default function Profile() {
   const { user, signOut } = useAuth();
   const router = useRouter();
-  const appVersion = Application.nativeApplicationVersion;
+  const appVersion = Application.nativeApplicationVersion || "1.0.0";
+
+  // TODO: work on verification
+  const isVerified = false;
 
   const handleLogout = () => {
-    Alert.alert("Log Out", "Are you sure you want to log out?", [
+    Alert.alert("Log Out", "Are you sure?", [
       { text: "Cancel", style: "cancel" },
-      {
-        text: "Log Out",
-        style: "destructive",
-        onPress: () => signOut()
-      }
+      { text: "Log Out", style: "destructive", onPress: () => signOut() }
     ]);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* --- HEADER --- */}
-        <View style={styles.headerContainer}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
+
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
+        {/* Title */}
+        <View style={styles.header}>
           <Text style={styles.headerTitle}>Profile</Text>
         </View>
 
@@ -84,8 +75,8 @@ export default function Profile() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {/* --- PROFILE HERO CARD --- */}
-          <View style={styles.profileHero}>
+          {/* User Card */}
+          <View style={styles.userCard}>
             <View style={styles.avatarContainer}>
               <Image
                 source={
@@ -93,258 +84,236 @@ export default function Profile() {
                     ? { uri: user.picture }
                     : require("@/assets/images/avatar.jpg")
                 }
-                style={styles.profilePhoto}
+                style={styles.avatar}
               />
-              {/* Optional: Status Badge */}
-              <View style={styles.statusBadge}>
-                <Ionicons name="checkmark" size={12} color="#fff" />
-              </View>
+              <TouchableOpacity
+                style={styles.editBadge}
+                onPress={() => router.push("/settings/edit-profile")}
+              >
+                <Ionicons name="pencil" size={12} color="#fff" />
+              </TouchableOpacity>
             </View>
 
             <View style={styles.userInfo}>
-              <Text style={styles.nameText}>{user?.name || "User Name"}</Text>
-              <Text style={styles.emailText}>
+              <Text style={styles.userName}>{user?.name || "John Doe"}</Text>
+              <Text style={styles.userEmail}>
                 {user?.email || "user@example.com"}
               </Text>
-            </View>
 
-            <TouchableOpacity
-              style={styles.editProfileButton}
+              {/* Verification badge */}
+              {isVerified ? (
+                <View style={styles.verifiedBadge}>
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={12}
+                    color={Colors.success}
+                  />
+                  <Text style={styles.verifiedText}>Verified Donor</Text>
+                </View>
+              ) : (
+                <View style={styles.unverifiedBadge}>
+                  <Ionicons
+                    name="alert-circle"
+                    size={12}
+                    color={Colors.warning}
+                  />
+                  <Text style={styles.unverifiedText}>Not Verified</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Menus */}
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={styles.menuGroup}>
+            <ProfileMenuItem
+              icon="person-outline"
+              label="Personal Details"
               onPress={() => router.push("/settings/edit-profile")}
-            >
-              <Text style={styles.editProfileText}>Edit Profile</Text>
-            </TouchableOpacity>
+              color={Colors.primary}
+            />
+            <ProfileMenuItem
+              icon="notifications-outline"
+              label="Notifications"
+              onPress={() => router.push("/notifications")}
+              color={Colors.primary}
+            />
           </View>
 
-          {/* Single menu section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Account Settings</Text>
-            <View style={styles.menuGroup}>
-              <MenuItem
-                icon="notifications-outline"
-                label="Notifications"
-                onPress={() => router.push("/notifications")}
-              />
-              <MenuItem
-                icon="shield-checkmark-outline"
-                label="Privacy & Security"
-                onPress={() => router.push("/settings/privacy")}
-              />
-              <MenuItem
-                icon="help-buoy-outline"
-                label="Help & Support"
-                onPress={() => router.push("/settings/help")}
-                noBorder={true}
-              />
-            </View>
+          <Text style={styles.sectionTitle}>Support</Text>
+          <View style={styles.menuGroup}>
+            <ProfileMenuItem
+              icon="lock-closed-outline"
+              label="Privacy & Security"
+              onPress={() => router.push("/settings/privacy")}
+              color={Colors.primary}
+            />
+            <ProfileMenuItem
+              icon="help-buoy-outline"
+              label="Help & Support"
+              onPress={() => router.push("/settings/help")}
+              color={Colors.primary}
+            />
           </View>
 
-          {/* Logout section */}
-          <View style={styles.logoutSection}>
-            <TouchableOpacity
-              style={styles.logoutButtonModern}
-              onPress={handleLogout}
-              activeOpacity={0.8}
-            >
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color="#FF453A"
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.logoutTextModern}>Log Out</Text>
-            </TouchableOpacity>
+          {/* Footer */}
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
 
-            <Text style={styles.versionText}>Version {appVersion}</Text>
-          </View>
+          <Text style={styles.versionText}>Version {appVersion}</Text>
         </ScrollView>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: ThemeColors.screenBackground
-  },
-  container: {
-    flex: 1,
-    backgroundColor: ThemeColors.screenBackground
-  },
-  scrollContent: {
-    paddingBottom: 40
-  },
+  container: { flex: 1, backgroundColor: Colors.background },
+  scrollContent: { paddingBottom: 40 },
 
   // Header
-  headerContainer: {
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === "android" ? 20 : 10,
-    paddingBottom: 10
-  },
+  header: { paddingHorizontal: 24, paddingTop: 10, paddingBottom: 20 },
   headerTitle: {
-    fontSize: 28,
-    color: ThemeColors.primaryContent,
-    fontFamily: Platform.select({
-      android: "Poppins_700Bold",
-      ios: "Poppins-Bold"
-    })
+    fontSize: 34,
+    fontWeight: "800",
+    color: Colors.textMain,
+    letterSpacing: -1
   },
 
-  // Profile Hero
-  profileHero: {
+  // User Card
+  userCard: {
+    flexDirection: "row",
     alignItems: "center",
+    backgroundColor: Colors.surface,
+    marginHorizontal: 20,
     marginBottom: 30,
-    marginTop: 10
+    padding: 20,
+    borderRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3
   },
-  avatarContainer: {
-    position: "relative",
-    marginBottom: 16
+  avatarContainer: { position: "relative", marginRight: 16 },
+  avatar: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: Colors.border
   },
-  profilePhoto: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: ThemeColors.surfaceBackground
-  },
-  statusBadge: {
+  editBadge: {
     position: "absolute",
-    bottom: 2,
-    right: 2,
-    backgroundColor: "#32D74B", // Green success color
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    bottom: 0,
+    right: 0,
+    backgroundColor: Colors.textMain,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 3,
-    borderColor: ThemeColors.screenBackground
+    borderWidth: 2,
+    borderColor: "#fff"
   },
-  userInfo: {
+  userInfo: { flex: 1 },
+  userName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: Colors.textMain,
+    marginBottom: 2
+  },
+  userEmail: { fontSize: 13, color: Colors.textSub, marginBottom: 8 },
+
+  // Verified badge
+  verifiedBadge: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20
+    alignSelf: "flex-start",
+    backgroundColor: Colors.successBg,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8
   },
-  nameText: {
-    fontSize: 24,
-    fontWeight: "600",
-    color: ThemeColors.primaryContent,
-    marginBottom: 4,
-    fontFamily: Platform.select({
-      android: "Poppins_600SemiBold",
-      ios: "Poppins-SemiBold"
-    })
-  },
-  emailText: {
-    fontSize: 14,
-    color: ThemeColors.secondaryContent
+  verifiedText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.success,
+    marginLeft: 4,
+    textTransform: "uppercase"
   },
 
-  // Edit Profile Button (Pill Shape)
-  editProfileButton: {
-    backgroundColor: ThemeColors.surfaceBackground,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: ThemeColors.border || "rgba(255,255,255,0.1)"
+  // Unverified badge
+  unverifiedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: Colors.warningBg,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8
   },
-  editProfileText: {
-    color: ThemeColors.primaryContent,
-    fontSize: 14,
-    fontWeight: "600"
+  unverifiedText: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: Colors.warning,
+    marginLeft: 4,
+    textTransform: "uppercase"
   },
 
-  // Sections
-  section: {
-    paddingHorizontal: 20,
-    marginBottom: 25
-  },
+  // Menu
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: ThemeColors.secondaryContent,
-    marginBottom: 12,
+    fontSize: 12,
+    fontWeight: "700",
+    color: Colors.textSub,
+    marginBottom: 10,
+    marginLeft: 24,
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginLeft: 4
+    letterSpacing: 1
   },
   menuGroup: {
-    backgroundColor: ThemeColors.surfaceBackground,
-    borderRadius: 16,
-    overflow: "hidden"
+    backgroundColor: Colors.surface,
+    marginHorizontal: 20,
+    borderRadius: 20,
+    padding: 8,
+    marginBottom: 25
   },
-
-  // Menu Item
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: ThemeColors.border || "rgba(255,255,255,0.05)"
+    paddingVertical: 12,
+    paddingHorizontal: 8
   },
-  menuItemDestructive: {
-    backgroundColor: ThemeColors.surfaceBackground,
-    borderRadius: 16,
-    borderBottomWidth: 0,
-    borderWidth: 1,
-    borderColor: "rgba(255, 69, 58, 0.2)"
-  },
-  iconContainer: {
+  iconBox: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 14
+    marginRight: 12
   },
-  iconNeutral: {
-    backgroundColor: "rgba(255, 255, 255, 0.05)"
-  },
-  iconDestructive: {
-    backgroundColor: "rgba(255, 69, 58, 0.1)"
-  },
-  menuText: {
+  menuLabel: {
     flex: 1,
-    fontSize: 16,
-    color: ThemeColors.primaryContent,
-    fontWeight: "500"
-  },
-  textDestructive: {
-    color: "#FF453A",
-    fontWeight: "600"
+    fontSize: 15,
+    fontWeight: "500",
+    color: Colors.textMain
   },
 
-  // Logout Specific
-  logoutSection: {
-    paddingHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 20,
-    alignItems: "center"
-  },
-  logoutButtonModern: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255, 69, 58, 0.1)", // Faint Red Background
+  // Footer
+  logoutButton: {
+    marginHorizontal: 20,
     paddingVertical: 16,
-    width: "100%",
     borderRadius: 16,
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "#FF453A" // Solid Red Border
+    borderColor: Colors.errorBg,
+    backgroundColor: Colors.surface
   },
-  logoutTextModern: {
-    color: "#FF453A",
-    fontSize: 16,
-    fontWeight: "bold",
-    letterSpacing: 0.5
-  },
+  logoutText: { color: Colors.error, fontWeight: "bold", fontSize: 16 },
   versionText: {
     textAlign: "center",
-    marginTop: 15,
-    color: ThemeColors.secondaryContent,
-    fontSize: 12,
-    opacity: 0.6
+    marginTop: 20,
+    color: Colors.textMuted,
+    fontSize: 12
   }
 });

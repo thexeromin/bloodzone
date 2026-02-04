@@ -3,49 +3,70 @@ import {
   ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  StatusBar,
+  View
 } from "react-native";
-import { ThemeColors } from "@/constants";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Colors } from "@/constants";
 import BloodRequestForm from "@/components/blood-request-form";
 
 export default function BloodRequest() {
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, backgroundColor: ThemeColors.primaryContent }}
-    >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.header}>Request Blood</Text>
-        <Text style={styles.subHeader}>Quickly find donors nearby</Text>
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.background} />
 
-        <BloodRequestForm />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "left", "right"]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Header Section */}
+            <View style={styles.headerContainer}>
+              <Text style={styles.header}>Request Blood</Text>
+              <Text style={styles.subHeader}>Quickly find donors nearby</Text>
+            </View>
+
+            {/* Form Component */}
+            <BloodRequestForm />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    padding: 25,
-    paddingTop: 40,
-    backgroundColor: ThemeColors.screenBackground
+    backgroundColor: Colors.background
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40
+  },
+
+  // Header Styles
+  headerContainer: {
+    marginTop: 10,
+    marginBottom: 30
   },
   header: {
-    marginBottom: 5,
-    fontSize: 28,
-    color: ThemeColors.primaryContent,
-    fontFamily: Platform.select({
-      android: "Poppins_700Bold",
-      ios: "Poppins-Bold"
-    })
+    fontSize: 34,
+    fontWeight: "800",
+    color: Colors.textMain,
+    letterSpacing: -1,
+    marginBottom: 8,
+    fontFamily: Platform.OS === "ios" ? "System" : "Roboto"
   },
   subHeader: {
     fontSize: 16,
-    color: ThemeColors.secondaryContent,
-    marginBottom: 30
+    color: Colors.textSub,
+    fontWeight: "500"
   }
 });

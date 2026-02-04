@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   View,
@@ -9,13 +9,13 @@ import {
   Platform,
   Alert
 } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import { Colors, ThemeColors } from "@/constants";
+import { Colors } from "@/constants";
 import { useLocation } from "@/hooks";
 import { profileSetup } from "@/services";
 import { useAuth } from "@/context";
@@ -58,7 +58,10 @@ export default function UserDetailsForm({ onSignOut }: Props) {
 
   const onSubmit = async (data: ProfileFormValues) => {
     if (!location?.coords) {
-      Alert.alert("Error", "GPS location missing. Please wait or enable GPS.");
+      Alert.alert(
+        "Location Missing",
+        "Please wait for GPS to fetch your location."
+      );
       return;
     }
 
@@ -71,34 +74,24 @@ export default function UserDetailsForm({ onSignOut }: Props) {
           lon: location.coords.longitude.toString()
         }
       };
-
       const response = await profileSetup(fetchWithAuth, payload);
-
       if (response.status === 200) {
-        Alert.alert("Success", "Profile setup complete!");
+        Alert.alert("Success", "Profile updated successfully!");
         handleProfileComplete(true);
       } else {
-        Alert.alert("Error", "Something went wrong with server call");
+        Alert.alert("Error", "Could not save profile details.");
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Failed to save profile.");
+      Alert.alert("Error", "Network request failed.");
     }
   };
 
   if (locLoading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={ThemeColors.accent} />
-        <Text
-          style={{
-            color: ThemeColors.secondaryContent,
-            marginTop: 10,
-            textAlign: "center"
-          }}
-        >
-          Fetching your location...
-        </Text>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Detecting your location...</Text>
       </View>
     );
   }
@@ -106,103 +99,113 @@ export default function UserDetailsForm({ onSignOut }: Props) {
   if (errorMsg) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>{errorMsg}</Text>
+        <View style={styles.errorBox}>
+          <Ionicons name="alert-circle" size={24} color={Colors.error} />
+          <Text style={styles.errorMsgText}>{errorMsg}</Text>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {/* Blood Type Picker */}
-      <View style={styles.pickerContainer}>
-        <Controller
-          control={control}
-          name="bloodGroup"
-          render={({ field: { onChange, value } }) => (
-            <Picker
-              selectedValue={value}
-              onValueChange={onChange}
-              style={styles.picker}
-              dropdownIconColor={ThemeColors.secondaryContent}
-              itemStyle={{ color: ThemeColors.secondaryContent }} // iOS
-            >
-              <Picker.Item
-                label="Select Blood Type"
-                value=""
-                color={ThemeColors.placeholder}
-              />
-              {BLOOD_GROUPS.map((bg) => (
-                <Picker.Item
-                  key={bg}
-                  label={bg}
-                  value={bg}
-                  color={ThemeColors.secondaryContent} // Android
-                />
-              ))}
-            </Picker>
-          )}
-        />
-      </View>
-      {errors.bloodGroup && (
-        <Text style={styles.errorText}>{errors.bloodGroup.message}</Text>
-      )}
+      {/* Blood group picker */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Blood Group</Text>
 
-      {/* Location Input */}
-      <View style={styles.row}>
-        <View style={{ flex: 1 }}>
+        <View style={styles.pickerWrapper}>
           <Controller
             control={control}
-            name="address"
+            name="bloodGroup"
             render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={[styles.input, { marginBottom: 0 }]}
-                placeholder="Location"
-                value={value}
-                onChangeText={onChange}
-                placeholderTextColor={ThemeColors.placeholder}
-                editable={false} // Usually locked if GPS provided
-              />
+              <Picker
+                selectedValue={value}
+                onValueChange={onChange}
+                style={styles.picker}
+                mode="dropdown"
+                dropdownIconColor={Colors.textSub}
+              >
+                <Picker.Item
+                  label="Select your type"
+                  value=""
+                  color={Colors.textMuted}
+                  style={{ backgroundColor: "#ffffff" }}
+                />
+                {BLOOD_GROUPS.map((bg) => (
+                  <Picker.Item
+                    key={bg}
+                    label={bg}
+                    value={bg}
+                    color={Colors.textMain}
+                    style={{ backgroundColor: "#ffffff" }}
+                  />
+                ))}
+              </Picker>
             )}
           />
         </View>
-
-        <TouchableOpacity style={styles.circleButton}>
-          <MaterialIcons
-            name="my-location"
-            size={20}
-            color={Colors.neutral100}
-          />
-        </TouchableOpacity>
+        {errors.bloodGroup && (
+          <Text style={styles.fieldError}>{errors.bloodGroup.message}</Text>
+        )}
       </View>
-      {errors.address && (
-        <Text style={styles.errorText}>{errors.address.message}</Text>
-      )}
 
-      {/* Action Buttons */}
-      <View style={styles.buttonRow}>
+      {/* Location input */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Location</Text>
+        <View style={styles.locationRow}>
+          <View style={styles.locationInputWrapper}>
+            <Controller
+              control={control}
+              name="address"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Fetching address..."
+                  value={value}
+                  onChangeText={onChange}
+                  placeholderTextColor={Colors.textMuted}
+                  editable={false}
+                  multiline={false}
+                />
+              )}
+            />
+          </View>
+          <View style={styles.gpsButton}>
+            <Ionicons name="location-sharp" size={20} color={Colors.primary} />
+          </View>
+        </View>
+        {errors.address && (
+          <Text style={styles.fieldError}>{errors.address.message}</Text>
+        )}
+      </View>
+
+      {/* Buttons */}
+      <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[
-            styles.actionButton,
-            styles.saveButton,
-            isSubmitting && { opacity: 0.7 }
+            styles.btn,
+            styles.saveBtn,
+            isSubmitting && styles.btnDisabled
           ]}
           onPress={handleSubmit(onSubmit)}
           disabled={isSubmitting}
+          activeOpacity={0.8}
         >
           {isSubmitting ? (
-            <ActivityIndicator color={Colors.neutral900} />
+            <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveButtonText}>Save Details</Text>
+            <Text style={styles.saveBtnText}>Save Profile</Text>
           )}
         </TouchableOpacity>
 
         {onSignOut && (
           <TouchableOpacity
-            style={[styles.actionButton, styles.logoutButton]}
+            style={[styles.btn, styles.logoutBtn]}
             onPress={onSignOut}
             disabled={isSubmitting}
+            activeOpacity={0.7}
           >
-            <Text style={styles.logoutButtonText}>Logout</Text>
+            <Text style={styles.logoutBtnText}>Log Out</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -211,93 +214,106 @@ export default function UserDetailsForm({ onSignOut }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    width: "100%"
+  container: { paddingVertical: 10, width: "100%" },
+
+  // States
+  loadingContainer: { padding: 40, alignItems: "center" },
+  loadingText: { marginTop: 15, color: Colors.textSub, fontSize: 14 },
+  errorBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: Colors.errorBg,
+    padding: 16,
+    borderRadius: 16
   },
-  // Wrapper for Picker to match input style
-  pickerContainer: {
-    height: 50,
+  errorMsgText: { color: Colors.error, marginLeft: 10, fontSize: 14, flex: 1 },
+
+  // Inputs
+  inputGroup: { marginBottom: 20 },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: Colors.textMain,
+    marginBottom: 8,
+    marginLeft: 4
+  },
+  fieldError: {
+    color: Colors.error,
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4
+  },
+
+  // Picker styles
+  pickerWrapper: {
+    height: 56,
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: ThemeColors.surfaceBackground,
-    borderRadius: 25,
-    marginBottom: 15,
+    borderColor: Colors.border,
     justifyContent: "center",
+    // Creates the left padding on Android
+    paddingLeft: Platform.OS === "android" ? 12 : 0,
     overflow: "hidden"
   },
   picker: {
     width: "100%",
-    color: ThemeColors.secondaryContent,
-    marginLeft: Platform.OS === "android" ? 10 : 0
+    backgroundColor: "#ffffff",
+    color: Colors.textMain,
+    height: 56
+  },
+
+  // Location
+  locationRow: { flexDirection: "row", alignItems: "center" },
+  locationInputWrapper: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    height: 56,
+    justifyContent: "center"
   },
   input: {
-    height: 50,
-    borderWidth: 1,
-    borderColor: ThemeColors.surfaceBackground,
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    color: ThemeColors.secondaryContent,
-    marginBottom: 15,
-    fontFamily: Platform.select({
-      android: "Poppins_400Regular",
-      ios: "Poppins-Regular"
-    })
+    paddingHorizontal: 16,
+    fontSize: 15,
+    color: Colors.textMain,
+    height: "100%"
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15
-  },
-  circleButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: ThemeColors.surfaceBackground,
+  gpsButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryLight,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 10
+    marginLeft: 12,
+    borderWidth: 1,
+    borderColor: "rgba(211, 47, 47, 0.1)"
   },
-  buttonRow: {
-    flexDirection: "row",
-    marginTop: 20,
-    gap: 12
-  },
-  actionButton: {
-    flex: 1,
-    height: 50,
-    borderRadius: 25,
+
+  // Buttons
+  buttonContainer: { marginTop: 10, gap: 16 },
+  btn: {
+    height: 56,
+    borderRadius: 28,
     justifyContent: "center",
     alignItems: "center"
   },
-  saveButton: {
-    backgroundColor: ThemeColors.accent
+  btnDisabled: { opacity: 0.7 },
+  saveBtn: {
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4
   },
-  logoutButton: {
-    backgroundColor: ThemeColors.dangerSecondary
+  saveBtnText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  logoutBtn: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: Colors.border
   },
-  saveButtonText: {
-    color: Colors.neutral900,
-    fontSize: 16,
-    fontFamily: Platform.select({
-      android: "Poppins_500Medium",
-      ios: "Poppins-Medium"
-    })
-  },
-  logoutButtonText: {
-    color: ThemeColors.primaryContent,
-    fontSize: 16,
-    fontFamily: Platform.select({
-      android: "Poppins_400Regular",
-      ios: "Poppins-Regular"
-    })
-  },
-  errorText: {
-    color: ThemeColors.dangerSecondary,
-    fontSize: 12,
-    marginBottom: 10,
-    marginLeft: 15,
-    marginTop: -10
-  }
+  logoutBtnText: { color: Colors.error, fontSize: 16, fontWeight: "600" }
 });

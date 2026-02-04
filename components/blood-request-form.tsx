@@ -18,16 +18,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context";
 import { useLocation } from "@/hooks";
 import { createBloodRequest } from "@/services";
-import { ThemeColors, Colors } from "@/constants";
+import { Colors } from "@/constants";
 
+// Validation schema
 const requestSchema = z.object({
   bloodType: z.string().min(1, "Blood Type is required"),
   address: z.string().min(3, "Address is required"),
   phone: z.string().regex(/^[0-9]{10}$/, "Must be a valid 10-digit number"),
   neededBy: z.date(),
-  // Hidden fields for coordinates
-  latitude: z.number({ error: "Location is required" }),
-  longitude: z.number({ error: "Location is required" })
+  latitude: z.number({ error: () => ({ message: "Location is required" }) }),
+  longitude: z.number({ error: () => ({ message: "Location is required" }) })
 });
 
 type RequestFormValues = z.infer<typeof requestSchema>;
@@ -60,29 +60,23 @@ export default function BloodRequestForm() {
     }
   });
 
-  // Watch the date value to display it in the text box
   const selectedDate = watch("neededBy");
   const lat = watch("latitude");
 
+  // Auto-fill location
   useEffect(() => {
-    // If hook provides location, update form hidden fields
-    if (location) {
-      // Assuming location object has latitude/longitude directly.
-      // If it's inside coords, change to location.coords.latitude
+    if (location?.coords) {
       setValue("latitude", location.coords.latitude, { shouldValidate: true });
       setValue("longitude", location.coords.longitude, {
         shouldValidate: true
       });
     }
 
-    // If hook provides an address (reverse geocode) and field is empty, auto-fill it
-    if (address && !getValues("address")) {
-      setValue("address", address.formattedAddress || "", {
-        shouldValidate: true
-      });
+    // Auto-fill address if empty
+    if (address?.formattedAddress && !getValues("address")) {
+      setValue("address", address.formattedAddress, { shouldValidate: true });
     }
 
-    // Handle Error from hook
     if (errorMsg) {
       Alert.alert("Location Error", errorMsg);
     }
@@ -94,7 +88,6 @@ export default function BloodRequestForm() {
         fetchWithAuth,
         data
       );
-
       const result = await response.json();
 
       if (response.ok) {
@@ -102,9 +95,12 @@ export default function BloodRequestForm() {
           { text: "OK" }
         ]);
         reset({
+          bloodType: "A+",
           address: address?.formattedAddress || "",
-          longitude: location?.coords.longitude,
-          latitude: location?.coords.latitude
+          phone: "",
+          neededBy: new Date(),
+          latitude: location?.coords.latitude,
+          longitude: location?.coords.longitude
         });
       } else {
         Alert.alert("Error", result.message || "Something went wrong");
@@ -117,146 +113,172 @@ export default function BloodRequestForm() {
 
   return (
     <View style={styles.form}>
-      {/* Blood Type Picker */}
-      <Text style={styles.label}>Blood Group</Text>
-      <View style={styles.inputWrapper}>
-        <Controller
-          control={control}
-          name="bloodType"
-          render={({ field: { onChange, value } }) => (
-            <Picker
-              selectedValue={value}
-              onValueChange={onChange}
-              // Fixes for visibility:
-              dropdownIconColor="#333" // Forces the arrow to be dark
-              mode="dropdown" // Android: looks cleaner
-              style={styles.picker}
-              // iOS specific text color fix:
-              itemStyle={{ color: ThemeColors.secondaryContent }}
-            >
-              {BLOOD_GROUPS.map((bg) => (
-                <Picker.Item key={bg} label={bg} value={bg} />
-              ))}
-            </Picker>
+      {/* Blood group picker */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Blood Group</Text>
+        <View style={styles.pickerWrapper}>
+          <Controller
+            control={control}
+            name="bloodType"
+            render={({ field: { onChange, value } }) => (
+              <Picker
+                selectedValue={value}
+                onValueChange={onChange}
+                mode="dropdown"
+                style={styles.picker}
+                dropdownIconColor={Colors.textSub}
+              >
+                {BLOOD_GROUPS.map((bg) => (
+                  <Picker.Item
+                    key={bg}
+                    label={bg}
+                    value={bg}
+                    color={Colors.textMain}
+                    style={{ backgroundColor: "#ffffff" }}
+                  />
+                ))}
+              </Picker>
+            )}
+          />
+        </View>
+        {errors.bloodType && (
+          <Text style={styles.errorText}>{errors.bloodType.message}</Text>
+        )}
+      </View>
+
+      {/* Location status indicator */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Location Status</Text>
+        <View
+          style={[
+            styles.locationBadge,
+            lat
+              ? styles.locSuccess
+              : locLoading
+                ? styles.locLoading
+                : styles.locError
+          ]}
+        >
+          {locLoading ? (
+            <ActivityIndicator
+              size="small"
+              color={Colors.warning}
+              style={{ marginRight: 8 }}
+            />
+          ) : (
+            <Ionicons
+              name={lat ? "checkmark-circle" : "alert-circle"}
+              size={20}
+              color={lat ? Colors.success : Colors.error}
+              style={{ marginRight: 8 }}
+            />
           )}
-        />
-      </View>
-      {errors.bloodType && (
-        <Text style={styles.errorText}>{errors.bloodType.message}</Text>
-      )}
-
-      {/* --- LOCATION STATUS INDICATOR --- */}
-      <Text style={styles.label}>Location Status</Text>
-      <View
-        style={[
-          styles.locationBadge,
-          lat
-            ? styles.locationSuccess
-            : locLoading
-              ? styles.locationLoading
-              : styles.locationError
-        ]}
-      >
-        {locLoading ? (
-          <ActivityIndicator
-            size="small"
-            color={ThemeColors.accent}
-            style={{ marginRight: 10 }}
-          />
-        ) : (
-          <Ionicons
-            name={lat ? "checkmark-circle" : "alert-circle"}
-            size={20}
-            color={lat ? "white" : ThemeColors.accent}
-            style={{ marginRight: 8 }}
-          />
-        )}
-        <Text style={[styles.locationText, lat ? { color: "white" } : {}]}>
-          {locLoading
-            ? "Detecting Location..."
-            : lat
-              ? "Location Attached"
-              : "Location Not Found"}
-        </Text>
-      </View>
-      {errors.latitude && (
-        <Text style={styles.errorText}>{errors.latitude.message}</Text>
-      )}
-
-      {/* Address Input (Auto-filled but editable) */}
-      <Text style={styles.label}>Hospital / Address</Text>
-      <Controller
-        control={control}
-        name="address"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={[styles.input, errors.address && styles.inputError]}
-            placeholder="e.g. Apollo Hospital"
-            placeholderTextColor={ThemeColors.placeholder}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
-      />
-      {errors.address && (
-        <Text style={styles.errorText}>{errors.address.message}</Text>
-      )}
-
-      {/* Phone */}
-      <Text style={styles.label}>Contact Phone</Text>
-      <Controller
-        control={control}
-        name="phone"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={[styles.input, errors.phone && styles.inputError]}
-            placeholder="10-digit mobile number"
-            placeholderTextColor={ThemeColors.placeholder}
-            keyboardType="phone-pad"
-            maxLength={10}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
-      />
-      {errors.phone && (
-        <Text style={styles.errorText}>{errors.phone.message}</Text>
-      )}
-
-      {/* Date Picker */}
-      <Text style={styles.label}>Needed By</Text>
-      <TouchableOpacity
-        activeOpacity={0.8}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <View style={[styles.input, { justifyContent: "center" }]}>
-          <Text style={{ color: ThemeColors.primaryContent }}>
-            {selectedDate ? selectedDate.toDateString() : "Select Date"}
+          <Text
+            style={[
+              styles.locationText,
+              lat
+                ? { color: Colors.success }
+                : locLoading
+                  ? { color: Colors.warning }
+                  : { color: Colors.error }
+            ]}
+          >
+            {locLoading
+              ? "Detecting Location..."
+              : lat
+                ? "Location Attached"
+                : "Location Not Found"}
           </Text>
         </View>
-      </TouchableOpacity>
-      {errors.neededBy && (
-        <Text style={styles.errorText}>{errors.neededBy.message}</Text>
-      )}
+        {errors.latitude && (
+          <Text style={styles.errorText}>GPS Location is required.</Text>
+        )}
+      </View>
 
-      {showDatePicker && (
-        <DateTimePicker
-          value={selectedDate || new Date()}
-          mode="date"
-          minimumDate={new Date()}
-          display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(event, date) => {
-            setShowDatePicker(false);
-            if (date) {
-              setValue("neededBy", date, { shouldValidate: true });
-            }
-          }}
+      {/* Address input */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Hospital / Address</Text>
+        <Controller
+          control={control}
+          name="address"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[styles.input, errors.address && styles.inputError]}
+              placeholder="e.g. Apollo Hospital"
+              placeholderTextColor={Colors.textMuted}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+            />
+          )}
         />
-      )}
+        {errors.address && (
+          <Text style={styles.errorText}>{errors.address.message}</Text>
+        )}
+      </View>
 
-      {/* Submit Button */}
+      {/* Phone input */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Contact Phone</Text>
+        <Controller
+          control={control}
+          name="phone"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={[styles.input, errors.phone && styles.inputError]}
+              placeholder="10-digit mobile number"
+              placeholderTextColor={Colors.textMuted}
+              keyboardType="phone-pad"
+              maxLength={10}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+            />
+          )}
+        />
+        {errors.phone && (
+          <Text style={styles.errorText}>{errors.phone.message}</Text>
+        )}
+      </View>
+
+      {/* Date picker */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Needed By</Text>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <View style={[styles.input, { justifyContent: "center" }]}>
+            <Text style={{ color: Colors.textMain, fontSize: 15 }}>
+              {selectedDate ? selectedDate.toDateString() : "Select Date"}
+            </Text>
+            <Ionicons
+              name="calendar-outline"
+              size={20}
+              color={Colors.textMuted}
+              style={{ position: "absolute", right: 15 }}
+            />
+          </View>
+        </TouchableOpacity>
+        {errors.neededBy && (
+          <Text style={styles.errorText}>{errors.neededBy.message}</Text>
+        )}
+
+        {showDatePicker && (
+          <DateTimePicker
+            value={selectedDate || new Date()}
+            mode="date"
+            minimumDate={new Date()}
+            display={Platform.OS === "ios" ? "spinner" : "default"}
+            onChange={(event, date) => {
+              setShowDatePicker(false);
+              if (date) setValue("neededBy", date, { shouldValidate: true });
+            }}
+          />
+        )}
+      </View>
+
+      {/* Submit button */}
       <TouchableOpacity
         style={[
           styles.submitButton,
@@ -264,10 +286,13 @@ export default function BloodRequestForm() {
         ]}
         onPress={handleSubmit(onSubmit)}
         disabled={isSubmitting}
+        activeOpacity={0.9}
       >
-        <Text style={styles.submitButtonText}>
-          {isSubmitting ? "Posting..." : "Post Request"}
-        </Text>
+        {isSubmitting ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.submitButtonText}>Post Request</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -275,118 +300,105 @@ export default function BloodRequestForm() {
 
 const styles = StyleSheet.create({
   form: {
-    width: "100%"
+    width: "100%",
+    paddingVertical: 10
+  },
+  inputGroup: {
+    marginBottom: 20
   },
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: ThemeColors.secondaryContent,
+    color: Colors.textMain,
     marginBottom: 8,
-    marginLeft: 5,
-    fontFamily: Platform.select({
-      android: "Poppins_400Regular",
-      ios: "Poppins-Regular"
-    })
+    marginLeft: 4
   },
+
+  // Input Style
   input: {
-    height: 50,
+    height: 56,
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: ThemeColors.surfaceBackground,
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    color: ThemeColors.secondaryContent,
-    marginBottom: 15,
-    fontFamily: Platform.select({
-      android: "Poppins_400Regular",
-      ios: "Poppins-Regular"
-    })
+    borderColor: Colors.border,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    fontSize: 15,
+    color: Colors.textMain
   },
   inputError: {
-    borderColor: ThemeColors.dangerPrimary
+    borderColor: Colors.error
   },
-  // Wrapper for Picker to match Input look
-  inputWrapper: {
-    height: 50,
+  errorText: {
+    color: Colors.error,
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4
+  },
+
+  // Picker Style
+  pickerWrapper: {
+    height: 56,
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: ThemeColors.surfaceBackground,
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    marginBottom: 15
+    borderColor: Colors.border,
+    borderRadius: 16,
+    justifyContent: "center",
+    paddingLeft: Platform.OS === "android" ? 12 : 0,
+    overflow: "hidden"
   },
   picker: {
     width: "100%",
-    color: ThemeColors.secondaryContent,
-    marginLeft: Platform.OS === "android" ? 10 : 0
+    backgroundColor: "#fff",
+    color: Colors.textMain,
+    height: 56
   },
-  errorText: {
-    color: ThemeColors.dangerPrimary,
-    fontSize: 12,
-    marginTop: -5,
-    marginBottom: 15,
-    marginLeft: 15,
-    fontFamily: Platform.select({
-      android: "Poppins_400Regular",
-      ios: "Poppins-Regular"
-    })
-  },
-  // Submit Button Styles
-  submitButton: {
+
+  // Location badge styles
+  locationBadge: {
     height: 50,
-    borderRadius: 25,
-    backgroundColor: ThemeColors.accent,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    borderWidth: 1
+  },
+  locLoading: {
+    backgroundColor: Colors.warningBg,
+    borderColor: Colors.warningBg
+  },
+  locSuccess: {
+    backgroundColor: Colors.successBg,
+    borderColor: Colors.successBg
+  },
+  locError: {
+    backgroundColor: Colors.errorBg,
+    borderColor: Colors.errorBg
+  },
+  locationText: {
+    fontSize: 14,
+    fontWeight: "600"
+  },
+
+  // Submit button
+  submitButton: {
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 15,
+    marginTop: 10,
+    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
     elevation: 4
   },
   submitButtonDisabled: {
-    backgroundColor: "#ff8a80",
-    elevation: 0
+    opacity: 0.7
   },
   submitButtonText: {
-    color: Colors.neutral900,
+    color: "#fff",
     fontSize: 16,
-    fontFamily: Platform.select({
-      android: "Poppins_500Medium",
-      ios: "Poppins-Medium"
-    })
-  },
-
-  // location styles
-  locationBadge: {
-    height: 50,
-    borderRadius: 25,
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20
-  },
-  locationLoading: {
-    borderColor: ThemeColors.accent,
-    borderStyle: "dashed",
-    backgroundColor: "rgba(211, 47, 47, 0.05)"
-  },
-  locationSuccess: {
-    borderColor: ThemeColors.surfaceBackground,
-    borderStyle: "solid"
-  },
-  locationError: {
-    borderColor: ThemeColors.dangerPrimary,
-    backgroundColor: "rgba(211, 47, 47, 0.05)"
-  },
-  locationText: {
-    color: ThemeColors.accent,
-    fontSize: 15,
-    fontWeight: "600",
-    fontFamily: Platform.select({
-      android: "Poppins_500Medium",
-      ios: "Poppins-Medium"
-    })
+    fontWeight: "bold"
   }
 });
