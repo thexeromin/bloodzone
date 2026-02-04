@@ -34,7 +34,8 @@ interface Props {
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export default function UserDetailsForm({ onSignOut }: Props) {
-  const { fetchWithAuth, handleProfileComplete, user } = useAuth();
+  const { fetchWithAuth, handleProfileComplete, user, refreshSession } =
+    useAuth();
   const { location, address, errorMsg, loading: locLoading } = useLocation();
 
   const {
@@ -75,8 +76,10 @@ export default function UserDetailsForm({ onSignOut }: Props) {
         }
       };
       const response = await profileSetup(fetchWithAuth, payload);
+      console.log(response);
       if (response.status === 200) {
         Alert.alert("Success", "Profile updated successfully!");
+        await refreshSession();
         handleProfileComplete(true);
       } else {
         Alert.alert("Error", "Could not save profile details.");

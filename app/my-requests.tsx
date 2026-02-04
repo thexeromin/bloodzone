@@ -148,7 +148,7 @@ export default function MyRequestsScreen() {
                 </Text>
                 <TouchableOpacity
                   style={styles.createBtn}
-                  onPress={() => router.push("/(tabs)/donate")}
+                  onPress={() => router.push("/(tabs)/blood-request")}
                 >
                   <Text style={styles.createBtnText}>Create New Request</Text>
                 </TouchableOpacity>

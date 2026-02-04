@@ -23,7 +23,8 @@ const AuthContext = React.createContext({
   isLoading: false,
   isProfileComplete: false,
   handleProfileComplete: (b: boolean) => {},
-  error: null as AuthError | null
+  error: null as AuthError | null,
+  refreshSession: async () => {}
 });
 
 const config: AuthRequestConfig = {
@@ -402,7 +403,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isProfileComplete,
         error,
         fetchWithAuth,
-        handleProfileComplete
+        handleProfileComplete,
+        refreshSession: async () => {
+          refreshAccessToken();
+        }
       }}
     >
       {children}
