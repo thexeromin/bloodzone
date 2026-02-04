@@ -33,9 +33,6 @@ export default function LoginScreen() {
           <View style={styles.heroContent}>
             <View style={styles.logoCircle}>
               <Ionicons name="water" size={52} color={Colors.primary} />
-              <View style={styles.plusBadge}>
-                <Ionicons name="add" size={16} color="#fff" />
-              </View>
             </View>
 
             <Text style={styles.appName}>BloodZone</Text>
@@ -111,19 +108,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 10
-  },
-  plusBadge: {
-    position: "absolute",
-    bottom: 5,
-    right: 5,
-    backgroundColor: Colors.success,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 3,
-    borderColor: "#fff"
   },
   appName: {
     fontSize: 32,
