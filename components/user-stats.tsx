@@ -23,30 +23,45 @@ export default function UserStats() {
   });
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [daysRemaining, setDaysRemaining] = useState(0);
 
-  // Fetch stats
+  // Eligibility State
+  const [daysRemaining, setDaysRemaining] = useState(0);
+  const [recoveryProgress, setRecoveryProgress] = useState(0); // 0 to 100%
+
   useEffect(() => {
     fetchStats();
   }, []);
 
-  // Calculate eligibility
+  // Calculate eligibility & Progress
   useEffect(() => {
     if (stats.lastDonated) {
       const lastDate = new Date(stats.lastDonated);
       const today = new Date();
 
-      // Standard rule: 3 months (approx 90 days) is safer for whole blood,
-      // but if your rule is 30 days, keep it as is.
+      // Rule: 90 days recovery
+      const RECOVERY_DAYS = 90;
+
       const nextEligibleDate = new Date(lastDate);
-      nextEligibleDate.setDate(lastDate.getDate() + 56); // Standard is 56 days (8 weeks)
+      nextEligibleDate.setDate(lastDate.getDate() + RECOVERY_DAYS);
 
       const diffTime = nextEligibleDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      setDaysRemaining(diffDays > 0 ? diffDays : 0);
+      if (diffDays > 0) {
+        setDaysRemaining(diffDays);
+        // Calculate progress percentage (how many days passed / total needed)
+        // Example: 30 days left out of 90 means 60 days passed (66% recovered)
+        const daysPassed = RECOVERY_DAYS - diffDays;
+        const percent = (daysPassed / RECOVERY_DAYS) * 100;
+        setRecoveryProgress(percent);
+      } else {
+        setDaysRemaining(0);
+        setRecoveryProgress(100);
+      }
     } else {
+      // Never donated -> Eligible immediately
       setDaysRemaining(0);
+      setRecoveryProgress(100);
     }
   }, [stats.lastDonated]);
 
@@ -93,7 +108,7 @@ export default function UserStats() {
       if (result.success) {
         setStats((prev) => ({
           ...prev,
-          totalDonation: result.data.totalDonations, // Ensure this matches API key
+          totalDonation: result.data.totalDonation,
           lastDonated: result.data.lastDonated
         }));
         Alert.alert("Thank You!", "Your donation has been recorded.");
@@ -157,24 +172,32 @@ export default function UserStats() {
               <Text style={styles.actionBtnTextRed}>I Donated Today</Text>
             </TouchableOpacity>
           ) : (
-            // Simple progress bar visualization
-            <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: "10%" }]} />
+            // Dynamic Progress Bar
+            <View style={styles.progressBarWrapper}>
+              <View style={styles.progressBarBg}>
+                <View
+                  style={[
+                    styles.progressBarFill,
+                    { width: `${recoveryProgress}%` } // Use calculated percentage
+                  ]}
+                />
+              </View>
+              <Text style={styles.progressText}>
+                {Math.round(recoveryProgress)}% Recovered
+              </Text>
             </View>
           )}
         </LinearGradient>
       </View>
 
-      {/* --- STATS OVERVIEW (NOW DYNAMIC) --- */}
+      {/* --- STATS OVERVIEW --- */}
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          {/* 1. Real Blood Group */}
           <Text style={styles.statValue}>{stats.bloodGroup}</Text>
           <Text style={styles.statLabel}>Blood Type</Text>
         </View>
 
         <View style={styles.statCard}>
-          {/* 2. Real Total Donations */}
           <Text style={styles.statValue}>
             {stats.totalDonation < 10
               ? `0${stats.totalDonation}`
@@ -184,7 +207,6 @@ export default function UserStats() {
         </View>
 
         <View style={styles.statCard}>
-          {/* 3. Real Lives Saved (Total * 3) */}
           <Text style={styles.statValue}>{stats.totalDonation * 3}</Text>
           <Text style={styles.statLabel}>Lives Saved</Text>
         </View>
@@ -251,16 +273,28 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 14
   },
+
+  // Updated Progress Bar Styles
+  progressBarWrapper: {
+    width: "100%"
+  },
   progressBarBg: {
     height: 6,
     backgroundColor: "rgba(255,255,255,0.3)",
     borderRadius: 3,
-    width: "100%"
+    width: "100%",
+    marginBottom: 8
   },
   progressBarFill: {
     height: "100%",
     backgroundColor: "#fff",
     borderRadius: 3
+  },
+  progressText: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "right"
   },
 
   // Stats Row
