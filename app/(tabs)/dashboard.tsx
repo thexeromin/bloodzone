@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  FlatList,
   StatusBar
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,31 +18,6 @@ import UrgentRequests from "@/components/urgent-requests";
 export default function Dashboard() {
   const { user } = useAuth();
   const router = useRouter();
-
-  const renderRequestItem = ({ item }: any) => (
-    <View style={styles.reqCard}>
-      <View style={styles.reqHeader}>
-        <View style={styles.bloodTag}>
-          <Text style={styles.bloodTagText}>{item.type}</Text>
-        </View>
-        {item.urgent && (
-          <View style={styles.urgentTag}>
-            <Text style={styles.urgentText}>URGENT</Text>
-          </View>
-        )}
-      </View>
-      <Text style={styles.reqTitle} numberOfLines={1}>
-        {item.hospital}
-      </Text>
-      <View style={styles.reqMeta}>
-        <Ionicons name="location-outline" size={14} color={Colors.textSub} />
-        <Text style={styles.reqDistance}>{item.distance} away</Text>
-      </View>
-      <TouchableOpacity style={styles.donateBtnSmall}>
-        <Text style={styles.donateBtnText}>Donate</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -133,7 +107,7 @@ export default function Dashboard() {
           {/* Urgent requests */}
           <View style={styles.listHeader}>
             <Text style={styles.sectionTitle}>Urgent Requests</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/donate")}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>

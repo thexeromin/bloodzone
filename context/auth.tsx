@@ -9,12 +9,25 @@ import {
   useAuthRequest
 } from "expo-auth-session";
 import { tokenCache } from "@/utils/cache";
-import { BASE_URL } from "@/constants";
+import { API } from "@/constants";
 import * as jose from "jose";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const AuthContext = React.createContext({
+interface AuthContextType {
+  user: AuthUser | null;
+  signIn: () => void;
+  signOut: () => void;
+  fetchWithAuth: (url: string, options: RequestInit) => Promise<Response>;
+  isLoading: boolean;
+  isProfileComplete: boolean;
+  handleProfileComplete: (b: boolean) => void;
+  error: AuthError | null;
+  refreshSession: () => Promise<void>;
+  accessToken: string | null;
+}
+
+const AuthContext = React.createContext<AuthContextType>({
   user: null as AuthUser | null,
   signIn: () => {},
   signOut: () => {},
@@ -24,7 +37,8 @@ const AuthContext = React.createContext({
   isProfileComplete: false,
   handleProfileComplete: (b: boolean) => {},
   error: null as AuthError | null,
-  refreshSession: async () => {}
+  refreshSession: async () => {},
+  accessToken: null
 });
 
 const config: AuthRequestConfig = {
@@ -34,8 +48,8 @@ const config: AuthRequestConfig = {
 };
 
 const discovery: DiscoveryDocument = {
-  authorizationEndpoint: `${BASE_URL}/api/auth/authorize`,
-  tokenEndpoint: `${BASE_URL}/api/auth/token`
+  authorizationEndpoint: `${API}/api/auth/authorize`,
+  tokenEndpoint: `${API}/api/auth/token`
 };
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -158,7 +172,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       console.log("Using refresh token to get new tokens");
-      const refreshResponse = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      const refreshResponse = await fetch(`${API}/api/auth/refresh`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -310,7 +324,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // The server will exchange this code with Google for access and refresh tokens
         // For web: credentials are included to handle cookies
         // For native: we'll receive the tokens directly in the response
-        const tokenResponse = await fetch(`${BASE_URL}/api/auth/token`, {
+        const tokenResponse = await fetch(`${API}/api/auth/token`, {
           method: "POST",
           body: formData,
           credentials: "same-origin" // Include cookies for web
@@ -396,6 +410,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider
       value={{
+        accessToken,
         user,
         signIn,
         signOut,

@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/constants";
+import { API } from "@/constants";
 import { ENDPOINTS } from "./config";
 
 export const profileSetup = (
@@ -9,7 +9,7 @@ export const profileSetup = (
     location: { lat: string; lon: string };
   }
 ) => {
-  return fetcher(`${BASE_URL}${ENDPOINTS.USER_SETUP}`, {
+  return fetcher(`${API}${ENDPOINTS.USER_SETUP}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -21,7 +21,7 @@ export const profileSetup = (
 export const getUserStats = (
   fetcher: (url: string, options: RequestInit) => Promise<Response>
 ) => {
-  return fetcher(`${BASE_URL}${ENDPOINTS.USER_STATS}`, {
+  return fetcher(`${API}${ENDPOINTS.USER_STATS}`, {
     method: "GET"
   });
 };
@@ -29,7 +29,7 @@ export const getUserStats = (
 export const logDonation = (
   fetcher: (url: string, options: RequestInit) => Promise<Response>
 ) => {
-  return fetcher(`${BASE_URL}${ENDPOINTS.USER_LOG_DONATION}`, {
+  return fetcher(`${API}${ENDPOINTS.USER_LOG_DONATION}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -43,7 +43,7 @@ export const findDonors = (
 ) => {
   const queryString = params ? `?${params.toString()}` : "";
 
-  return fetcher(`${BASE_URL}${ENDPOINTS.FIND_DONORS}${queryString}`, {
+  return fetcher(`${API}${ENDPOINTS.FIND_DONORS}${queryString}`, {
     method: "GET"
   });
 };

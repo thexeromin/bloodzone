@@ -1,4 +1,4 @@
-import { AuthProvider, useAuth } from "@/context";
+import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import {
@@ -8,7 +8,8 @@ import {
   useFonts
 } from "@expo-google-fonts/poppins";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { AuthProvider, useAuth } from "@/context";
+import { ToastProvider } from "@/context/toast";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -70,7 +71,9 @@ export default function RootLayout() {
     <>
       <StatusBar style="auto" />
       <AuthProvider>
-        <InitialLayout />
+        <ToastProvider>
+          <InitialLayout />
+        </ToastProvider>
       </AuthProvider>
     </>
   );

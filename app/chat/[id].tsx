@@ -18,13 +18,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context";
 import { getMessages } from "@/services";
 import { Colors } from "@/constants";
-import { BASE_URL as SOCKET_URL } from "@/constants";
+import { API as SOCKET_URL } from "@/constants";
 
 export default function ChatRoom() {
   const { id, recipientName } = useLocalSearchParams();
   const roomId = Array.isArray(id) ? id[0] : id;
 
-  const { user, fetchWithAuth } = useAuth();
+  const { user, fetchWithAuth, accessToken } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState("");
 
@@ -52,7 +52,11 @@ export default function ChatRoom() {
 
   // Socket
   useEffect(() => {
-    socketRef.current = io(SOCKET_URL);
+    if (!accessToken) return;
+
+    socketRef.current = io(SOCKET_URL, {
+      auth: { token: accessToken }
+    });
     socketRef.current.emit("join_room", roomId);
     socketRef.current.on("receive_message", (msg: any) => {
       setMessages((prev) => [...prev, msg]);
@@ -61,7 +65,7 @@ export default function ChatRoom() {
     return () => {
       socketRef.current.disconnect();
     };
-  }, [roomId]);
+  }, [roomId, accessToken]);
 
   // Auto scroll
   useEffect(() => {

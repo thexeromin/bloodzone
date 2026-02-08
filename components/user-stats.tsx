@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,20 +9,32 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@/context";
+import { useAuth, useToast } from "@/context";
 import { getUserStats, logDonation } from "@/services";
 import { Colors } from "@/constants";
 
+interface UserStatsData {
+  bloodGroup: string;
+  totalDonation: number;
+  lastDonated: string | null;
+}
+
 export default function UserStats() {
   const { fetchWithAuth } = useAuth();
+  const { showToast, hideToast } = useToast();
 
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<UserStatsData>({
     bloodGroup: "...",
     totalDonation: 0,
-    lastDonated: null as string | null
+    lastDonated: null
   });
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+
+  // Undo Logic State
+  // TODO: 'any' for the timer to avoid React Native vs Node type conflicts
+  const undoTimerRef = useRef<any>(null);
+  const prevStatsRef = useRef<UserStatsData | null>(null);
 
   // Eligibility State
   const [daysRemaining, setDaysRemaining] = useState(0);
@@ -30,6 +42,12 @@ export default function UserStats() {
 
   useEffect(() => {
     fetchStats();
+
+    return () => {
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+      }
+    };
   }, []);
 
   // Calculate eligibility & Progress
@@ -38,7 +56,6 @@ export default function UserStats() {
       const lastDate = new Date(stats.lastDonated);
       const today = new Date();
 
-      // Rule: 90 days recovery
       const RECOVERY_DAYS = 90;
 
       const nextEligibleDate = new Date(lastDate);
@@ -49,8 +66,6 @@ export default function UserStats() {
 
       if (diffDays > 0) {
         setDaysRemaining(diffDays);
-        // Calculate progress percentage (how many days passed / total needed)
-        // Example: 30 days left out of 90 means 60 days passed (66% recovered)
         const daysPassed = RECOVERY_DAYS - diffDays;
         const percent = (daysPassed / RECOVERY_DAYS) * 100;
         setRecoveryProgress(percent);
@@ -59,7 +74,6 @@ export default function UserStats() {
         setRecoveryProgress(100);
       }
     } else {
-      // Never donated -> Eligible immediately
       setDaysRemaining(0);
       setRecoveryProgress(100);
     }
@@ -85,6 +99,72 @@ export default function UserStats() {
     }
   };
 
+  const performOptimisticUpdate = () => {
+    // 1. Snapshot current stats so we can undo later
+    prevStatsRef.current = { ...stats };
+
+    // 2. Optimistically update UI immediately
+    const todayStr = new Date().toISOString();
+    setStats((prev) => ({
+      ...prev,
+      totalDonation: prev.totalDonation + 1,
+      lastDonated: todayStr
+    }));
+
+    // 3. Define what happens if the user clicks "UNDO"
+    const handleUndoAction = () => {
+      // Stop the delayed API call
+      if (undoTimerRef.current) {
+        clearTimeout(undoTimerRef.current);
+      }
+      // Revert the UI instantly
+      if (prevStatsRef.current) {
+        setStats(prevStatsRef.current);
+      }
+      // Toast hides automatically via Context logic
+    };
+
+    // 4. Trigger the Global Toast
+    showToast("Marked as Donated", handleUndoAction);
+
+    // 5. Start the "Point of No Return" Timer (5 Seconds)
+    if (undoTimerRef.current) {
+      clearTimeout(undoTimerRef.current);
+    }
+
+    undoTimerRef.current = setTimeout(async () => {
+      // Time is up! Commit to server.
+      await saveDonationToServer();
+      hideToast(); // Close the toast cleanly
+    }, 5000);
+  };
+
+  const saveDonationToServer = async () => {
+    try {
+      setUpdating(true);
+      const res = await logDonation(fetchWithAuth);
+      const result = await res.json();
+
+      if (result.success) {
+        // Optional: Sync with exact server data to be safe
+        setStats((prev) => ({
+          ...prev,
+          totalDonation: result.data.totalDonation,
+          lastDonated: result.data.lastDonated
+        }));
+      } else {
+        // If server failed, we must revert manually and alert user
+        Alert.alert("Error", result.message || "Failed to save donation.");
+        if (prevStatsRef.current) setStats(prevStatsRef.current);
+      }
+    } catch (error) {
+      Alert.alert("Connection Error", "Could not save donation.");
+      if (prevStatsRef.current) setStats(prevStatsRef.current);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleDonationClick = () => {
     Alert.alert(
       "Confirm Donation",
@@ -93,33 +173,10 @@ export default function UserStats() {
         { text: "Cancel", style: "cancel" },
         {
           text: "Yes, I Donated",
-          onPress: performUpdate
+          onPress: performOptimisticUpdate // Call our new function
         }
       ]
     );
-  };
-
-  const performUpdate = async () => {
-    try {
-      setUpdating(true);
-      const res = await logDonation(fetchWithAuth);
-      const result = await res.json();
-
-      if (result.success) {
-        setStats((prev) => ({
-          ...prev,
-          totalDonation: result.data.totalDonation,
-          lastDonated: result.data.lastDonated
-        }));
-        Alert.alert("Thank You!", "Your donation has been recorded.");
-      } else {
-        Alert.alert("Error", result.message);
-      }
-    } catch (error) {
-      Alert.alert("Error", "Could not connect to server");
-    } finally {
-      setUpdating(false);
-    }
   };
 
   if (loading) {
@@ -159,7 +216,7 @@ export default function UserStats() {
 
           <Text style={styles.heroMainText}>
             {isEligible
-              ? "Your donation can save 3 lives today."
+              ? "Your donation can save 1 life today."
               : `Next donation eligible in ${daysRemaining} days.`}
           </Text>
 
@@ -169,7 +226,11 @@ export default function UserStats() {
               onPress={() => handleDonationClick()}
               disabled={updating}
             >
-              <Text style={styles.actionBtnTextRed}>I Donated Today</Text>
+              {updating ? (
+                <ActivityIndicator color="#D32F2F" />
+              ) : (
+                <Text style={styles.actionBtnTextRed}>I Donated Today</Text>
+              )}
             </TouchableOpacity>
           ) : (
             // Dynamic Progress Bar
@@ -178,7 +239,7 @@ export default function UserStats() {
                 <View
                   style={[
                     styles.progressBarFill,
-                    { width: `${recoveryProgress}%` } // Use calculated percentage
+                    { width: `${recoveryProgress}%` }
                   ]}
                 />
               </View>
@@ -207,7 +268,7 @@ export default function UserStats() {
         </View>
 
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{stats.totalDonation * 3}</Text>
+          <Text style={styles.statValue}>{stats.totalDonation}</Text>
           <Text style={styles.statLabel}>Lives Saved</Text>
         </View>
       </View>
@@ -221,6 +282,7 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   heroContainer: {
+    flex: 1,
     paddingHorizontal: 20,
     marginBottom: 25
   },
