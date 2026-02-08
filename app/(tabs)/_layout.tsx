@@ -2,9 +2,11 @@ import { Tabs, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Colors } from "@/constants";
 import { Platform } from "react-native";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export default function TabLayout() {
   const router = useRouter();
+  usePushNotifications();
 
   return (
     <Tabs

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "55376934038",
+    "project_id": "bloodzone-99626",
+    "storage_bucket": "bloodzone-99626.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:55376934038:android:d2d1a3e6f64777a51afeb7",
+        "android_client_info": {
+          "package_name": "com.xeromin.bloodzone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8uKk-72RyW6_ZKnVxdAejN4TfOkmF-MI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

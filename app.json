@@ -34,7 +34,8 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
       ],
-      "package": "com.anonymous.bloodzone"
+      "package": "com.xeromin.bloodzone",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -61,6 +62,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "55f4bc88-8aa0-4e13-83cd-0c8892b203a6"
+      }
     }
   }
 }

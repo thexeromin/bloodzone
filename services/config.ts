@@ -7,5 +7,6 @@ export const ENDPOINTS = {
   MY_REQUESTS: "/api/blood-requests/my-requests",
   INITIATE_CHAT: "/api/chat/initiate",
   GET_MY_CHATS: "/api/chat/",
-  GET_MESSAGES: "/api/chat/" // /chat/:roomId/messages
+  GET_MESSAGES: "/api/chat/", // /chat/:roomId/messages
+  UPDATE_PUSH_TOKEN: "/api/user/push-token"
 };

@@ -47,3 +47,16 @@ export const findDonors = (
     method: "GET"
   });
 };
+
+export const updatePushToken = (
+  fetcher: (url: string, options: RequestInit) => Promise<Response>,
+  token: string
+) => {
+  return fetcher(`${API}${ENDPOINTS.UPDATE_PUSH_TOKEN}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ pushToken: token })
+  });
+};
