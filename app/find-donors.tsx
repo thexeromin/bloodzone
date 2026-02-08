@@ -21,10 +21,10 @@ import DonorCard from "@/components/donor-card";
 import { useLocation } from "@/hooks/useLocation";
 
 // Constants
-const RADIUS_OPTIONS = [5, 10, 25, 50];
-const BLOOD_GROUPS = ["All", "A+", "A-", "B+", "B-", "AB+", "O+", "O-"];
+const RADIUS_OPTIONS = [5, 10, 20, 50];
+const BLOOD_GROUPS = ["All", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-// --- HELPER: Haversine Formula for Distance ---
+// Calculate Distance (Haversine Formula)
 const getDistance = (
   lat1?: number,
   lon1?: number,
@@ -45,7 +45,7 @@ const getDistance = (
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const d = R * c; // Distance in km
 
-  return d.toFixed(1); // Returns "2.4"
+  return d.toFixed(1);
 };
 
 const deg2rad = (deg: number) => {

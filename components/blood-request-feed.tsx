@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants";
 import { useAuth } from "@/context";
 import { getBloodRequests, initiateChat } from "@/services";
-import { useLocation } from "@/hooks/useLocation"; // <--- Import your hook
+import { useLocation } from "@/hooks/useLocation";
 
 import BloodRequestCard from "./blood-request-card";
 
@@ -53,7 +53,7 @@ interface Props {
 }
 
 const RADIUS_OPTIONS = [5, 10, 20, 50];
-const BLOOD_GROUPS = ["All", "A+", "A-", "B+", "B-", "AB+", "O+"];
+const BLOOD_GROUPS = ["All", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export default function BloodRequestFeed({
   showFilter = false,
