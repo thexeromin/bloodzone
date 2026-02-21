@@ -89,13 +89,13 @@ export const usePushNotifications = () => {
       }
     });
 
-    // Notification received while app is OPEN
+    // Notification received while app is open
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         setNotification(notification);
       });
 
-    // User TAPPED on the notification
+    // User tapped on the notification
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log("User tapped notification:", response);

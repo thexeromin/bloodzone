@@ -25,7 +25,6 @@ export default function MyRequestsScreen() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. Fetch Data
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
@@ -47,7 +46,6 @@ export default function MyRequestsScreen() {
     loadData();
   }, [loadData]);
 
-  // 2. Handle Delete
   const handleDelete = (id: string) => {
     Alert.alert("Delete Request?", "Are you sure? This cannot be undone.", [
       { text: "Cancel", style: "cancel" },
@@ -56,43 +54,34 @@ export default function MyRequestsScreen() {
         style: "destructive",
         onPress: async () => {
           try {
-            // Optimistic UI Update (Remove immediately)
             setRequests((prev) => prev.filter((r) => r._id !== id));
-
-            // API Call
             await deleteRequest(fetchWithAuth, id);
           } catch (error) {
             Alert.alert("Error", "Could not delete request");
-            loadData(); // Revert if failed
+            loadData();
           }
         }
       }
     ]);
   };
 
-  // 3. Handle Status Update (Mark Fulfilled)
   const handleUpdateStatus = async (
     id: string,
     newStatus: "active" | "fulfilled"
   ) => {
     try {
-      // Optimistic UI Update
       setRequests((prev) =>
         prev.map((item) =>
           item._id === id ? { ...item, status: newStatus } : item
         )
       );
 
-      // API Call
       const res = await updateRequestStatus(fetchWithAuth, id, newStatus);
-      // --- DEBUGGING START ---
       if (!res.ok) {
-        // If status is 404, 500, 401, read text to see why
         const errorText = await res.text();
         console.error("Server Error:", res.status, errorText);
         throw new Error("Server rejected update");
       }
-      // --- DEBUGGING END ---
       const data = await res.json();
 
       if (!data.success) {
@@ -144,7 +133,7 @@ export default function MyRequestsScreen() {
               <View style={styles.emptyContainer}>
                 <Ionicons name="documents-outline" size={64} color="#ddd" />
                 <Text style={styles.emptyText}>
-                  You haven't posted any requests.
+                  You haven&#39;t posted any requests.
                 </Text>
                 <TouchableOpacity
                   style={styles.createBtn}

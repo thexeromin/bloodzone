@@ -227,7 +227,6 @@ export default function FindDonorsScreen() {
               contentContainerStyle={{ paddingBottom: 40 }}
               showsVerticalScrollIndicator={false}
               renderItem={({ item }) => {
-                // --- CALCULATE REAL DISTANCE ---
                 // MongoDB GeoJSON format is [Longitude, Latitude]
                 // item.location.coordinates[0] = Longitude
                 // item.location.coordinates[1] = Latitude
@@ -250,7 +249,7 @@ export default function FindDonorsScreen() {
                     bloodGroup={item.bloodGroup || "?"}
                     avatar={item.avatar}
                     lastDonated={item.lastDonated}
-                    distance={`${distString} away`} // Passes real distance
+                    distance={`${distString} away`}
                     onChat={() => handleChat(item._id, item.name)}
                   />
                 );
@@ -275,7 +274,7 @@ export default function FindDonorsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1, backgroundColor: "#FFF" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -283,14 +282,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0"
+    borderBottomColor: "#F0F0F0"
   },
-  backBtn: { padding: 8, borderRadius: 20, backgroundColor: "#f9f9f9" },
+  backBtn: { padding: 8, borderRadius: 20, backgroundColor: "#F9F9F9" },
   headerTitle: { fontSize: 18, fontWeight: "bold", color: Colors.textMain },
   filterSection: {
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: "#fff"
+    backgroundColor: "#FFF"
   },
   filterRow: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
   filterLabel: {
@@ -303,21 +302,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#F0F0F0",
     marginRight: 8
   },
   chipActive: { backgroundColor: Colors.textMain },
   chipText: { fontSize: 13, color: Colors.textSub },
-  chipTextActive: { color: "#fff", fontWeight: "600" },
+  chipTextActive: { color: "#FFFFFF", fontWeight: "600" },
   bloodChip: {
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#eee",
+    borderColor: "#EEEEEE",
     marginRight: 8
   },
   bloodChipActive: {
@@ -325,7 +324,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary
   },
   bloodChipText: { fontWeight: "bold", color: Colors.textMain },
-  bloodChipTextActive: { color: "#fff" },
+  bloodChipTextActive: { color: "#FFFFFF" },
   listContainer: {
     flex: 1,
     backgroundColor: "#FAFAFA",

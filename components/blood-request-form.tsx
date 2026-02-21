@@ -20,7 +20,6 @@ import { useLocation } from "@/hooks";
 import { createBloodRequest } from "@/services";
 import { Colors } from "@/constants";
 
-// Validation schema
 const requestSchema = z.object({
   bloodType: z.string().min(1, "Blood Type is required"),
   address: z.string().min(3, "Address is required"),
@@ -38,7 +37,13 @@ export default function BloodRequestForm() {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const { fetchWithAuth } = useAuth();
-  const { location, address, errorMsg, loading: locLoading } = useLocation();
+  const {
+    location,
+    address,
+    errorMsg,
+    loading: locLoading,
+    refreshLocation
+  } = useLocation();
 
   const {
     control,
@@ -149,47 +154,62 @@ export default function BloodRequestForm() {
       {/* Location status indicator */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Location Status</Text>
-        <View
-          style={[
-            styles.locationBadge,
-            lat
-              ? styles.locSuccess
-              : locLoading
-                ? styles.locLoading
-                : styles.locError
-          ]}
-        >
-          {locLoading ? (
-            <ActivityIndicator
-              size="small"
-              color={Colors.warning}
-              style={{ marginRight: 8 }}
-            />
-          ) : (
-            <Ionicons
-              name={lat ? "checkmark-circle" : "alert-circle"}
-              size={20}
-              color={lat ? Colors.success : Colors.error}
-              style={{ marginRight: 8 }}
-            />
-          )}
-          <Text
+
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <View
             style={[
-              styles.locationText,
+              styles.locationBadge,
+              { flex: 1 },
               lat
-                ? { color: Colors.success }
+                ? styles.locSuccess
                 : locLoading
-                  ? { color: Colors.warning }
-                  : { color: Colors.error }
+                  ? styles.locLoading
+                  : styles.locError
             ]}
           >
-            {locLoading
-              ? "Detecting Location..."
-              : lat
-                ? "Location Attached"
-                : "Location Not Found"}
-          </Text>
+            {locLoading ? (
+              <ActivityIndicator
+                size="small"
+                color={Colors.warning}
+                style={{ marginRight: 8 }}
+              />
+            ) : (
+              <Ionicons
+                name={lat ? "checkmark-circle" : "alert-circle"}
+                size={20}
+                color={lat ? Colors.success : Colors.error}
+                style={{ marginRight: 8 }}
+              />
+            )}
+            <Text
+              style={[
+                styles.locationText,
+                lat
+                  ? { color: Colors.success }
+                  : locLoading
+                    ? { color: Colors.warning }
+                    : { color: Colors.error }
+              ]}
+            >
+              {locLoading
+                ? "Detecting Location..."
+                : lat
+                  ? "Location Attached"
+                  : "Location Not Found"}
+            </Text>
+          </View>
+
+          {!lat && !locLoading && (
+            <TouchableOpacity
+              style={styles.refreshButton}
+              onPress={refreshLocation}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="refresh" size={20} color="#fff" />
+            </TouchableOpacity>
+          )}
         </View>
+
         {errors.latitude && (
           <Text style={styles.errorText}>GPS Location is required.</Text>
         )}
@@ -377,6 +397,21 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 14,
     fontWeight: "600"
+  },
+  // 4. Styles for the new refresh button
+  refreshButton: {
+    height: 50,
+    width: 50,
+    backgroundColor: Colors.error, // Or a secondary brand color
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 10,
+    shadowColor: Colors.error,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2
   },
 
   // Submit button

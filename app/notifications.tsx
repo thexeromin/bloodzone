@@ -69,7 +69,7 @@ export default function NotificationsScreen() {
           bg: Colors.successBg
         };
       case "message":
-        return { name: "chatbubble", color: "#2196F3", bg: "#E3F2FD" }; // Custom Blue
+        return { name: "chatbubble", color: "#2196F3", bg: "#E3F2FD" };
       default:
         return {
           name: "information-circle",
@@ -180,7 +180,7 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background // Soft Grey
+    backgroundColor: Colors.background
   },
   listContent: {
     paddingHorizontal: 20,
@@ -212,10 +212,9 @@ const styles = StyleSheet.create({
   },
   unreadCard: {
     borderColor: Colors.primaryLight, // Subtle border for unread
-    backgroundColor: "#fff" // Keep white bg for cleanliness
+    backgroundColor: "#fff"
   },
 
-  // Icon
   iconCircle: {
     width: 42,
     height: 42,
@@ -225,7 +224,6 @@ const styles = StyleSheet.create({
     marginRight: 14
   },
 
-  // Text Content
   textContainer: {
     flex: 1,
     justifyContent: "center"

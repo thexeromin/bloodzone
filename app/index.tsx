@@ -15,14 +15,12 @@ import GoogleLoginButton from "@/components/google-login-button";
 const { width, height } = Dimensions.get("window");
 
 export default function LoginScreen() {
-  // 2. Get Dynamic Version
   const appVersion = Application.nativeApplicationVersion || "1.0.0";
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
 
-      {/* --- HERO SECTION --- */}
       <View style={styles.heroContainer}>
         <LinearGradient
           colors={Colors.gradientPrimary}
@@ -44,7 +42,6 @@ export default function LoginScreen() {
         </LinearGradient>
       </View>
 
-      {/* --- LOGIN CARD --- */}
       <View style={styles.cardContainer}>
         <View style={styles.loginCard}>
           <Text style={styles.welcomeTitle}>Welcome</Text>
@@ -52,7 +49,6 @@ export default function LoginScreen() {
             Join the community saving lives daily.
           </Text>
 
-          {/* GOOGLE BUTTON */}
           <GoogleLoginButton />
 
           <Text style={styles.termsText}>
@@ -63,9 +59,7 @@ export default function LoginScreen() {
         </View>
       </View>
 
-      {/* --- FOOTER --- */}
       <View style={styles.footer}>
-        {/* 3. Display Dynamic Version */}
         <Text style={styles.footerText}>Version {appVersion}</Text>
       </View>
     </View>
