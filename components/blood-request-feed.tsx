@@ -63,7 +63,7 @@ export default function BloodRequestFeed({
   const router = useRouter();
   const { fetchWithAuth, user } = useAuth();
 
-  const { location } = useLocation();
+  const { location, loading: locationLoading } = useLocation();
 
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +74,8 @@ export default function BloodRequestFeed({
   const [selectedBlood, setSelectedBlood] = useState("All");
 
   const fetchFeed = useCallback(async () => {
+    if (locationLoading) return;
+
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -110,7 +112,7 @@ export default function BloodRequestFeed({
       setLoading(false);
       setRefreshing(false);
     }
-  }, [radius, selectedBlood, limit, fetchWithAuth, location]); // Re-fetch if location loads
+  }, [radius, selectedBlood, limit, fetchWithAuth, location, locationLoading]); // Re-fetch if location loads
 
   useEffect(() => {
     fetchFeed();
@@ -193,9 +195,12 @@ export default function BloodRequestFeed({
     <View style={styles.container}>
       {showFilter && <FilterHeader />}
 
-      {loading ? (
+      {loading || locationLoading ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator size="small" color={Colors.primary} />
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={{ marginTop: 12, color: Colors.textMuted }}>
+            {locationLoading ? "Getting location..." : "Loading requests..."}
+          </Text>
         </View>
       ) : (
         <FlatList
