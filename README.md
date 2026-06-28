@@ -6,13 +6,24 @@
 
 ---
 
-## 📱 Live Demo
+## Screenshots
+
+<p align="center">
+  <img src="./assets/screenshots/index.jpg" width="200" />
+  <img src="./assets/screenshots/home.jpg" width="200" />
+  <img src="./assets/screenshots/donate.jpg" width="200" />
+  <img src="./assets/screenshots/profile.jpg" width="200" />
+</p>
+
+---
+
+## Live Demo
 
 - **🎥 Video Demo:** [YouTube](https://www.youtube.com/watch?v=Iv-OQy9J9Gw)
 
 ---
 
-## 🚀 What Makes BloodZone Different
+## What Makes BloodZone Different
 
 ### 1. Smart Location-Based Matching
 Most directory-style apps just list every donor in a city. BloodZone instead uses **MongoDB's 2dsphere geospatial indexing** to run targeted queries that actually narrow things down:
@@ -34,7 +45,7 @@ Donors and seekers can message each other instantly through **Socket.io**, with 
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer         | Technology          | Key Use Case                            |
 | :------------ | :------------------ | :--------------------------------------- |
